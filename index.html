@@ -204,8 +204,8 @@
         <header>Partogram Interpretation</header>
 
         <div id="mode-selector">
-            <!-- <button class="mode-button" data-mode="tutor">Tutor Mode (Guided Step-by-Step)</button> -->
-            <button class="mode-button" data-mode="test">View Cases</button>
+            <button class="mode-button" data-mode="tutor">Tutor Mode (Guided Step-by-Step)</button>
+            <button class="mode-button" data-mode="test">Self Assessment Mode</button>
         
             <div class="about-section">
                 <h3>About this App</h3>
@@ -291,12 +291,12 @@ document.addEventListener('DOMContentLoaded', () => {
     "steps": [
       {
         "time": 0,
-        "info": "<strong>Admission at 12:00 PM (T=0).</strong><br>You receive a handover from the admitting midwife: \"This is Sarah. On my initial assessment, she's coping well. Her vitals are stable: pulse is <strong>88</strong>, BP is <strong>120/75</strong>, and temp is <strong>37.0°C</strong>. The baby's heart rate is sitting around <strong>145 bpm</strong>. Abdominally, she's having about <strong>two moderate contractions every ten minutes</strong>. On VE, she's <strong>4 cm</strong> dilated, the head is <strong>3/5 palpable</strong>, membranes are <strong>intact</strong>, and there's <strong>no moulding</strong>. Could you please plot these findings?\"",
+        "info": "<strong>Admission at 12:00 PM (T=0).</strong><br>You receive a handover from the admitting midwife: \"This is Sarah. On my initial assessment, she's coping well. Her vitals are stable: pulse is <strong>88</strong>, BP is <strong>120/75</strong>, and temp is <strong>37.0°C</strong>. The baby's heart rate is sitting around <strong>145 bpm</strong>. Abdominally, she's having about <strong>two moderate contractions every ten minutes</strong>. On VE, she's <strong>4 cm</strong> dilated, the head is <strong>3/5 palpable</strong> (approximately -1 station), membranes are <strong>intact</strong>, and there's <strong>no moulding</strong>. Could you please plot these findings?\"",
         "task": {
           "type": "interactivePlot",
           "actions": [
             { "type": "dilation", "label": "Dilation (X)", "symbol": "X", "prompt": "Cervical Dilation (cm)", "data": { "time": 0, "value": 4 } },
-            { "type": "descent", "label": "Descent (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 3 } },
+            { "type": "descent", "label": "Descent / Station (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 3 } },
             { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 0, "value": 2, "duration": "moderate" } },
             { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 145 } },
             { "type": "liquor", "label": "Amniotic Fluid", "prompt": "Enter code (I, C, M, B)", "data": { "time": 0, "value": "I" } },
@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       {
         "time": 4,
-        "info": "<strong>Reassessment at 04:00 PM (T+4 hours).</strong><br>Four hours later, you reassess Sarah. Her progress has been slow. She is now <strong>5 cm</strong> dilated and the head has descended to <strong>2/5 palpable</strong>. Contractions are slightly more frequent at <strong>3 in 10 minutes</strong>, but still moderate. The FHR is <strong>140 bpm</strong>, and there is now <strong>1+ of moulding</strong>. Her pulse is <strong>90</strong> and BP is <strong>122/78</strong>. The partogram has been updated for you, and the plot has now crossed the Alert Line.",
+        "info": "<strong>Reassessment at 04:00 PM (T+4 hours).</strong><br>Four hours later, you reassess Sarah. Her progress has been slow. She is now <strong>5 cm</strong> dilated and the head has descended to <strong>2/5 palpable</strong> (0 station, at the ischial spines). Contractions are slightly more frequent at <strong>3 in 10 minutes</strong>, but still moderate. The FHR is <strong>140 bpm</strong>, and there is now <strong>1+ of moulding</strong>. Her pulse is <strong>90</strong> and BP is <strong>122/78</strong>. The partogram has been updated for you, and the plot has now crossed the Alert Line.",
         "prePlotActions": [
           { "type": "dilation", "data": { "time": 4, "value": 5 } },
           { "type": "descent", "data": { "time": 4, "value": 2 } },
@@ -334,12 +334,15 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       {
         "time": 6,
-        "info": "<strong>Reassessment at 06:00 PM (T+6 hours).</strong><br>It has been 2 hours since the ARM was performed. The liquor was noted to be <strong>clear</strong>. On reassessment, progress remains slow. She is now <strong>6 cm</strong> dilated, but the head is still <strong>2/5 palpable</strong>. Contractions remain at <strong>3 in 10 minutes, moderate strength</strong>. The plot is now approaching the Action Line.",
+        "info": "<strong>Reassessment at 06:00 PM (T+6 hours).</strong><br>It has been 2 hours since the ARM was performed. The liquor was noted to be <strong>clear</strong>. On reassessment, progress remains slow. She is now <strong>6 cm</strong> dilated, but the head is still <strong>2/5 palpable</strong> (0 station). Contractions remain at <strong>3 in 10 minutes, moderate strength</strong>. The plot is now approaching the Action Line.",
         "prePlotActions": [
           { "type": "dilation", "data": { "time": 6, "value": 6 } },
           { "type": "descent", "data": { "time": 6, "value": 2 } },
           { "type": "liquor", "data": { "time": 4.1, "value": "C" } },
-          { "type": "contractions", "data": { "time": 6, "value": 3, "duration": "moderate" } }
+          { "type": "contractions", "data": { "time": 6, "value": 3, "duration": "moderate" } },
+          { "type": "fhr", "data": { "time": 6, "value": 140 } },
+          { "type": "pulse", "data": { "time": 6, "value": 92 } },
+          { "type": "bp", "data": { "time": 6, "value": { "systolic": 120, "diastolic": 75 } } }
         ],
         "task": {
           "type": "final_mcq",
@@ -374,33 +377,39 @@ document.addEventListener('DOMContentLoaded', () => {
     "steps": [
       {
         "time": 0,
-        "info": "<strong>Admission at 08:00 AM (T=0).</strong><br>You review the admission note for Maria. It reads: \"Patient contracting strongly, <strong>3 in 10</strong>. On VE, cervix is <strong>5 cm</strong> dilated, head <strong>2/5 palpable</strong>. Liquor is <strong>clear</strong>. Mild <strong>moulding (1+)</strong> noted. FHR baseline is <strong>130 bpm</strong>.\" Please plot these findings.",
+        "info": "<strong>Admission at 08:00 AM (T=0).</strong><br>You review the admission note for Maria. It reads: \"Patient contracting strongly, <strong>3 in 10</strong>. On VE, cervix is <strong>5 cm</strong> dilated, head at <strong>0 station (2/5 palpable)</strong>. Liquor is <strong>clear</strong>. Mild <strong>moulding (1+)</strong> noted. FHR baseline is <strong>130 bpm</strong>. Her pulse is 85 and BP is 125/80.\" Please plot these findings.",
         "task": {
           "type": "interactivePlot",
           "actions": [
             { "type": "dilation", "label": "Dilation (X)", "symbol": "X", "prompt": "Cervical Dilation (cm)", "data": { "time": 0, "value": 5 } },
-            { "type": "descent", "label": "Descent (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 2 } },
+            { "type": "descent", "label": "Descent / Station (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 2 } },
             { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 0, "value": 3, "duration": "strong" } },
             { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 130 } },
             { "type": "liquor", "label": "Amniotic Fluid", "prompt": "Enter code (I, C, M, B)", "data": { "time": 0, "value": "C" } },
-            { "type": "moulding", "label": "Moulding", "prompt": "Enter grade (0-3)", "data": { "time": 0, "value": 1 } }
+            { "type": "moulding", "label": "Moulding", "prompt": "Enter grade (0-3)", "data": { "time": 0, "value": 1 } },
+            { "type": "pulse", "label": "Maternal Pulse", "prompt": "Enter pulse (bpm)", "data": { "time": 0, "value": 85 } },
+            { "type": "bp", "label": "Maternal BP", "prompt": "Enter BP (mmHg)", "data": { "time": 0, "value": { "systolic": 125, "diastolic": 80 } } }
           ]
         }
       },
       {
         "time": 4,
-        "info": "<strong>Reassessment at 12:00 PM (T+4 hours).</strong><br>Initially, Maria made excellent progress. At T+2 hours, she was <strong>8cm</strong> dilated, with the head at <strong>1/5 palpable</strong> and <strong>4 strong contractions in 10</strong>. However, despite contractions becoming even more powerful (now <strong>5 in 10 minutes</strong>), Maria has made no progress in the last two hours. She remains <strong>8 cm</strong> dilated, and the head is still <strong>1/5 palpable</strong>. You note there is now <strong>severe moulding (3+)</strong> and the fetal heart rate has climbed to <strong>165 bpm</strong>. Her complete findings have been automatically plotted.",
+        "info": "<strong>Reassessment at 12:00 PM (T+4 hours).</strong><br>Initially, Maria made excellent progress. At T+2 hours, she was <strong>8cm</strong> dilated, with the head at <strong>1/5 palpable</strong> (+1 station) and <strong>4 strong contractions in 10</strong>. However, despite contractions becoming even more powerful (now <strong>5 in 10 minutes</strong>), Maria has made no progress in the last two hours. She remains <strong>8 cm</strong> dilated, and the head is still <strong>1/5 palpable</strong> (+1 station). You note there is now <strong>severe moulding (3+)</strong> and the fetal heart rate has climbed to <strong>165 bpm</strong>. Her complete findings, including stable maternal vitals, have been automatically plotted.",
         "prePlotActions": [
           { "type": "dilation", "data": { "time": 2, "value": 8 } },
           { "type": "descent", "data": { "time": 2, "value": 1 } },
           { "type": "contractions", "data": { "time": 2, "value": 4, "duration": "strong" } },
           { "type": "fhr", "data": { "time": 2, "value": 140 } },
           { "type": "moulding", "data": { "time": 2, "value": 1 } },
+          { "type": "pulse", "data": { "time": 2, "value": 90 } },
+          { "type": "bp", "data": { "time": 2, "value": { "systolic": 125, "diastolic": 80 } } },
           { "type": "dilation", "data": { "time": 4, "value": 8 } },
           { "type": "descent", "data": { "time": 4, "value": 1 } },
           { "type": "contractions", "data": { "time": 4, "value": 5, "duration": "strong" } },
           { "type": "fhr", "data": { "time": 4, "value": 165 } },
-          { "type": "moulding", "data": { "time": 4, "value": 3 } }
+          { "type": "moulding", "data": { "time": 4, "value": 3 } },
+          { "type": "pulse", "data": { "time": 4, "value": 100 } },
+          { "type": "bp", "data": { "time": 4, "value": { "systolic": 130, "diastolic": 85 } } }
         ],
         "task": {
           "type": "final_mcq",
@@ -435,12 +444,12 @@ document.addEventListener('DOMContentLoaded', () => {
     "steps": [
       {
         "time": 0,
-        "info": "<strong>Labour Ward at 01:00 PM (T=0).</strong><br>Aisha's TOLAC is underway. On assessment, she is <strong>6 cm</strong> dilated with the head <strong>2/5 palpable</strong>. She is having <strong>three moderate contractions every ten minutes</strong> and the liquor is <strong>clear</strong>. The baby's heart rate is a reassuring <strong>140 bpm</strong>. Please plot these findings.",
+        "info": "<strong>Labour Ward at 01:00 PM (T=0).</strong><br>Aisha's TOLAC is underway. On assessment, she is <strong>6 cm</strong> dilated with the head at <strong>0 station / 2/5 palpable</strong>. She is having <strong>three moderate contractions every ten minutes</strong> and the liquor is <strong>clear</strong>. The baby's heart rate is a reassuring <strong>140 bpm</strong>. Please plot these findings.",
         "task": {
           "type": "interactivePlot",
           "actions": [
             { "type": "dilation", "label": "Dilation (X)", "symbol": "X", "prompt": "Cervical Dilation (cm)", "data": { "time": 0, "value": 6 } },
-            { "type": "descent", "label": "Descent (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 2 } },
+            { "type": "descent", "label": "Descent / Station (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 2 } },
             { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 0, "value": 3, "duration": "moderate" } },
             { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 140 } },
             { "type": "liquor", "label": "Amniotic Fluid", "prompt": "Enter code (I, C, M, B)", "data": { "time": 0, "value": "C" } }
@@ -458,7 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         "task": {
           "type": "mcq",
-          "question": "A quick vaginal exam reveals the fetal head is now at -2 station (higher than before). Given the sudden pain, cessation of contractions, loss of station, and acute fetal bradycardia, what is the diagnosis?",
+          "question": "A quick vaginal exam reveals the fetal head is now at -2 station (i.e. 4/5 palpable, higher than before). Given the sudden pain, cessation of contractions, loss of station, and acute fetal bradycardia, what is the diagnosis?",
           "options": [
             { "id": "A", "text": "Placental Abruption" },
             { "id": "B", "text": "Cord Prolapse" },
@@ -494,7 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
   {
     "id": "scenario_04_vasa_previa",
     "title": "Scenario 4: The Rupture and the Red Flag",
-    "introduction": "Chloe, a 30-year-old G1P0 at 38 weeks, is in labour and progressing well. At 7cm dilated, with the fetal head at 0 station, the midwife decides to perform an Artificial Rupture of Membranes (ARM) to augment labour.",
+    "introduction": "Chloe, a 30-year-old G1P0 at 38 weeks, is in labour and progressing well. At 7cm dilated, with the fetal head at +1 station (1/5 palpable), the midwife decides to perform an Artificial Rupture of Membranes (ARM) to augment labour.",
     "finalSummary": {
       "diagnosis": "Ruptured Vasa Previa",
       "interpretation": "The partogram was normal until the moment of ARM. The sudden onset of painless vaginal bleeding immediately following membrane rupture, coupled with a catastrophic and acute fetal bradycardia, is the pathognomonic triad for a ruptured vasa previa. The mother remaining hemodynamically stable is another key clue, as the blood loss is fetal, not maternal.",
@@ -509,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
     "steps": [
       {
         "time": 0.02,
-        "info": "<strong>Emergency at 10:01 AM.</strong><br>At 10:00 AM, Chloe was <strong>7cm</strong> dilated, head <strong>1/5 palpable</strong>, with <strong>strong, 4 in 10</strong> contractions and a FHR of <strong>150 bpm</strong>. Her membranes were <strong>intact</strong>. An ARM was performed. Immediately after, there is a gush of fluid followed by bright red vaginal bleeding. The liquor is now considered <strong>'B' for bloody</strong>. Simultaneously, the CTG trace plummets to <strong>60 bpm</strong>. All these events have been plotted for you.",
+        "info": "<strong>Emergency at 10:01 AM.</strong><br>At 10:00 AM, Chloe was <strong>7cm</strong> dilated, head <strong>1/5 palpable</strong> (+1 station), with <strong>strong, 4 in 10</strong> contractions and a FHR of <strong>150 bpm</strong>. Her membranes were <strong>intact</strong>. An ARM was performed. Immediately after, there is a gush of fluid followed by bright red vaginal bleeding. The liquor is now considered <strong>'B' for bloody</strong>. Simultaneously, the CTG trace plummets to <strong>60 bpm</strong>. All these events have been plotted for you.",
         "prePlotActions": [
           { "type": "dilation", "data": { "time": 0, "value": 7 } },
           { "type": "descent", "data": { "time": 0, "value": 1 } },
@@ -568,12 +577,14 @@ document.addEventListener('DOMContentLoaded', () => {
     "steps": [
       {
         "time": 8,
-        "info": "<strong>Review at 08:00 PM (T+8 hours).</strong><br>You review Sarah's chart. She's now <strong>8cm</strong> dilated with the head at <strong>1/5 palpable</strong>. However, you note the oxytocin infusion has resulted in contractions now occurring <strong>6 times every 10 minutes</strong>. The FHR baseline has risen to <strong>170 bpm</strong>. Her partogram data has been updated.",
+        "info": "<strong>Review at 08:00 PM (T+8 hours).</strong><br>You review Sarah's chart. She's now <strong>8cm</strong> dilated with the head at <strong>1/5 palpable</strong> (+1 station). However, you note the oxytocin infusion has resulted in contractions now occurring <strong>6 times every 10 minutes</strong>. The FHR baseline has risen to <strong>170 bpm</strong>. Her partogram data has been updated.",
         "prePlotActions": [
           { "type": "dilation", "data": { "time": 8, "value": 8 } },
           { "type": "descent", "data": { "time": 8, "value": 1 } },
           { "type": "contractions", "data": { "time": 8, "value": 6, "duration": "strong" } },
-          { "type": "fhr", "data": { "time": 8, "value": 170 } }
+          { "type": "fhr", "data": { "time": 8, "value": 170 } },
+          { "type": "pulse", "data": { "time": 8, "value": 100 } },
+          { "type": "bp", "data": { "time": 8, "value": { "systolic": 125, "diastolic": 80 } } }
         ],
         "task": {
           "type": "mcq",
@@ -624,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
     "steps": [
       {
         "time": 1.5,
-        "info": "<strong>Review at 05:30 AM (T+1.5 hours).</strong><br>At 04:00 AM (T=0), Emily was confirmed as fully dilated at <strong>10cm</strong>, with the head <strong>1/5 palpable</strong>, <strong>strong, 4 in 10</strong> contractions, and an FHR of <strong>140</strong>. These findings have been plotted for you. After 90 minutes of pushing, Emily is visibly exhausted. Her pushing efforts are less effective, and her contractions have weakened to <strong>3 in 10 minutes and moderate strength</strong>. The baby's head has descended to the perineum and is now <strong>0/5 palpable</strong>, but there is now <strong>2+ of moulding</strong>. The fetal heart rate is stable at <strong>135 bpm</strong>. Please plot the current findings.",
+        "info": "<strong>Review at 05:30 AM (T+1.5 hours).</strong><br>At 04:00 AM (T=0), Emily was confirmed as fully dilated at <strong>10cm</strong>, with the head at <strong>1/5 palpable</strong> (+1 station), <strong>strong, 4 in 10</strong> contractions, and an FHR of <strong>140</strong>. These findings have been plotted for you. After 90 minutes of pushing, Emily is visibly exhausted. Her pushing efforts are less effective, and her contractions have weakened to <strong>3 in 10 minutes and moderate strength</strong>. The baby's head has descended to the perineum and is now <strong>0/5 palpable</strong> (+2 station), but there is now <strong>2+ of moulding</strong>. The fetal heart rate is stable at <strong>135 bpm</strong>. Please plot the current findings.",
         "prePlotActions": [
           { "type": "dilation", "data": { "time": 0, "value": 10 } },
           { "type": "descent", "data": { "time": 0, "value": 1 } },
@@ -634,7 +645,7 @@ document.addEventListener('DOMContentLoaded', () => {
         "task": {
           "type": "interactivePlot",
           "actions": [
-            { "type": "descent", "label": "Descent (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 1.5, "value": 0 } },
+            { "type": "descent", "label": "Descent / Station (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 1.5, "value": 0 } },
             { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 1.5, "value": 3, "duration": "moderate" } },
             { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 1.5, "value": 135 } },
             { "type": "moulding", "label": "Moulding", "prompt": "Enter grade (0-3)", "data": { "time": 1.5, "value": 2 } }
@@ -677,12 +688,12 @@ document.addEventListener('DOMContentLoaded', () => {
     "steps": [
       {
         "time": 0,
-        "info": "<strong>Admission at 09:00 AM (T=0).</strong><br>You've confirmed Jessica's baby is in an OP position. On assessment, she is <strong>4 cm</strong> dilated, but the head is still very high at <strong>4/5 palpable</strong>. Contractions are <strong>moderate, 3 in 10</strong>, and the FHR is <strong>145 bpm</strong>. Please plot these initial findings.",
+        "info": "<strong>Admission at 09:00 AM (T=0).</strong><br>You've confirmed Jessica's baby is in an OP position. On assessment, she is <strong>4 cm</strong> dilated, but the head is still very high at <strong>4/5 palpable</strong> (-2 station). Contractions are <strong>moderate, 3 in 10</strong>, and the FHR is <strong>145 bpm</strong>. Please plot these initial findings.",
         "task": {
           "type": "interactivePlot",
           "actions": [
             { "type": "dilation", "label": "Dilation (X)", "symbol": "X", "prompt": "Cervical Dilation (cm)", "data": { "time": 0, "value": 4 } },
-            { "type": "descent", "label": "Descent (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 4 } },
+            { "type": "descent", "label": "Descent / Station (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 4 } },
             { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 0, "value": 3, "duration": "moderate" } },
             { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 145 } }
           ]
@@ -690,12 +701,13 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       {
         "time": 4,
-        "info": "<strong>Review at 01:00 PM (T+4 hours).</strong><br>Four hours later, progress has been slow and the plot has crossed the Alert Line. The fetal head has descended to <strong>3/5 palpable</strong> and she is now <strong>6cm</strong> dilated. There is <strong>2+ moulding</strong>. Contractions are now <strong>strong, 4 in 10</strong>. The partogram has been updated for you.",
+        "info": "<strong>Review at 01:00 PM (T+4 hours).</strong><br>Four hours later, progress has been slow and the plot has crossed the Alert Line. The fetal head has descended to <strong>3/5 palpable</strong> (-1 station) and she is now <strong>6cm</strong> dilated. There is <strong>2+ moulding</strong>. Contractions are now <strong>strong, 4 in 10</strong>, and the FHR is stable at 140bpm. The partogram has been updated for you.",
         "prePlotActions": [
           { "type": "dilation", "data": { "time": 4, "value": 6 } },
           { "type": "descent", "data": { "time": 4, "value": 3 } },
           { "type": "contractions", "data": { "time": 4, "value": 4, "duration": "strong" } },
-          { "type": "moulding", "data": { "time": 4, "value": 2 } }
+          { "type": "moulding", "data": { "time": 4, "value": 2 } },
+          { "type": "fhr", "data": { "time": 4, "value": 140 } }
         ],
         "task": {
           "type": "final_mcq",
@@ -730,7 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
     "steps": [
       {
         "time": 0,
-        "info": "<strong>Initial Assessment.</strong><br>On examination, her cervix is <strong>2 cm</strong> dilated and 50% effaced. The fetal head is at -2 station. The CTG is reassuring. Contractions are moderate, occurring <strong>2-3 times in 10 minutes</strong>.",
+        "info": "<strong>Initial Assessment.</strong><br>On examination, her cervix is <strong>2 cm</strong> dilated and 50% effaced. The fetal head is at <strong>-2 station (4/5 palpable)</strong>. The CTG is reassuring. Contractions are moderate, occurring <strong>2-3 times in 10 minutes</strong>.",
         "task": {
           "type": "mcq",
           "question": "What is the correct diagnosis for Laura's situation?",
@@ -780,12 +792,12 @@ document.addEventListener('DOMContentLoaded', () => {
     "steps": [
       {
         "time": 0,
-        "info": "<strong>Admission at 02:00 PM (T=0).</strong><br>You admit Beth to the labour ward. Your initial assessment finds she is <strong>4 cm</strong> dilated, the head is <strong>3/5 palpable</strong>, and she is having <strong>3 moderate contractions every 10 minutes</strong>. The FHR is <strong>140 bpm</strong> and liquor is <strong>clear</strong>. Please plot these findings.",
+        "info": "<strong>Admission at 02:00 PM (T=0).</strong><br>You admit Beth to the labour ward. Your initial assessment finds she is <strong>4 cm</strong> dilated, the head is <strong>3/5 palpable</strong> (station -1), and she is having <strong>3 moderate contractions every 10 minutes</strong>. The FHR is <strong>140 bpm</strong> and liquor is <strong>clear</strong>. Please plot these findings.",
         "task": {
           "type": "interactivePlot",
           "actions": [
             { "type": "dilation", "label": "Dilation (X)", "symbol": "X", "prompt": "Cervical Dilation (cm)", "data": { "time": 0, "value": 4 } },
-            { "type": "descent", "label": "Descent (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 3 } },
+            { "type": "descent", "label": "Descent / Station (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 3 } },
             { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 0, "value": 3, "duration": "moderate" } },
             { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 140 } },
             { "type": "liquor", "label": "Amniotic Fluid", "prompt": "Enter code (I, C, M, B)", "data": { "time": 0, "value": "C" } }
@@ -794,12 +806,12 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       {
         "time": 2,
-        "info": "<strong>Review at 04:00 PM (T+2 hours).</strong><br>Two hours have passed. On review, Beth is making excellent progress. She is now <strong>6 cm</strong> dilated, the head has descended to <strong>2/5 palpable</strong>, and contractions are now <strong>strong, 4 in 10</strong>. The FHR is stable at <strong>135 bpm</strong>. Please plot the updated findings.",
+        "info": "<strong>Review at 04:00 PM (T+2 hours).</strong><br>Two hours have passed. On review, Beth is making excellent progress. She is now <strong>6 cm</strong> dilated, the head has descended to <strong>2/5 palpable</strong> (station 0), and contractions are now <strong>strong, 4 in 10</strong>. The FHR is stable at <strong>135 bpm</strong>. Please plot the updated findings.",
         "task": {
           "type": "interactivePlot",
           "actions": [
             { "type": "dilation", "label": "Dilation (X)", "symbol": "X", "prompt": "Cervical Dilation (cm)", "data": { "time": 2, "value": 6 } },
-            { "type": "descent", "label": "Descent (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 2, "value": 2 } },
+            { "type": "descent", "label": "Descent / Station (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 2, "value": 2 } },
             { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 2, "value": 4, "duration": "strong" } },
             { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 2, "value": 135 } }
           ]
@@ -807,7 +819,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       {
         "time": 4,
-        "info": "<strong>Review at 06:00 PM (T+4 hours).</strong><br>Progress continues to be excellent. She is now <strong>9cm</strong> dilated, and the head is fully engaged at <strong>0/5 palpable</strong>. The plot is well to the left of the Alert Line. All parameters are reassuring.",
+        "info": "<strong>Review at 06:00 PM (T+4 hours).</strong><br>Progress continues to be excellent. She is now <strong>9cm</strong> dilated, and the head is fully engaged at <strong>0/5 palpable</strong> (+2 station). Contractions are 5 in 10 and strong. The plot is well to the left of the Alert Line. All parameters are reassuring.",
         "prePlotActions": [
           { "type": "dilation", "data": { "time": 4, "value": 9 } },
           { "type": "descent", "data": { "time": 4, "value": 0 } },
@@ -847,9 +859,10 @@ document.addEventListener('DOMContentLoaded', () => {
     "steps": [
       {
         "time": 0,
-        "info": "<strong>Emergency Admission at 11:00 PM (T=0).</strong><br>On arrival, Karen is in distress, with a pulse of <strong>120</strong> and BP of <strong>100/60</strong>. Her abdomen is rigid ('woody') and exquisitely tender. A VE reveals she is <strong>7cm</strong> dilated, but the liquor is heavily <strong>blood-stained</strong>. The CTG is pathological with a baseline of <strong>170 bpm</strong> and uterine tachysystole. Her initial findings have been plotted.",
+        "info": "<strong>Emergency Admission at 11:00 PM (T=0).</strong><br>On arrival, Karen is in distress, with a pulse of <strong>120</strong> and BP of <strong>100/60</strong>. Her abdomen is rigid ('woody') and exquisitely tender. A VE reveals she is <strong>7cm</strong> dilated with the head at 3/5 palpable, but the liquor is heavily <strong>blood-stained</strong>. The CTG is pathological with a baseline of <strong>170 bpm</strong> and uterine tachysystole. Her initial findings have been plotted.",
         "prePlotActions": [
           { "type": "dilation", "data": { "time": 0, "value": 7 } },
+          { "type": "descent", "data": { "time": 0, "value": 3 } },
           { "type": "fhr", "data": { "time": 0, "value": 170 } },
           { "type": "contractions", "data": { "time": 0, "value": 7, "duration": "strong" } },
           { "type": "pulse", "data": { "time": 0, "value": 120 } },
@@ -1057,7 +1070,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { y: Y_POS.fhr_start, h: Y_POS.fhr_h, label: 'Fetal HR' },
             { y: Y_POS.liquor_start, h: Y_POS.liquor_h, label: 'Liquor' },
             { y: Y_POS.moulding_start, h: Y_POS.moulding_h, label: 'Moulding' },
-            { y: Y_POS.labor_graph_start, h: Y_POS.labor_graph_h, label: 'Dilation & Descent'},
+            { y: Y_POS.labor_graph_start, h: Y_POS.labor_graph_h, label: 'Dilation & Station'},
             { y: Y_POS.contractions_start, h: Y_POS.contractions_h, label: 'Contractions /10m' },
             { y: Y_POS.oxytocin_start, h: Y_POS.oxytocin_h, label: 'Oxytocin', sub:['U/L', 'Rate'] },
             { y: Y_POS.drugs_start, h: Y_POS.drugs_h, label: 'Drugs/IVF' },
@@ -1797,10 +1810,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function handlePlotAction() {
         const step = state.currentScenario.steps[state.currentStepIndex];
         const plotActions = step.task.actions;
-        
+
         if (state.currentPlotActionIndex >= plotActions.length) {
             app.partogram.svg.classList.remove('interactive');
-            app.scenario.plotTools.style.display = 'none';
+            app.scenario.plotTools.style.display = 'none'; // Hide this for tutor mode
             app.scenario.mcqOptions.innerHTML = '';
             
             if (step.task.mcq) {
@@ -1813,14 +1826,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         const action = plotActions[state.currentPlotActionIndex];
-        const textBasedTypes = ['temp', 'drugs', 'oxytocin', 'urine_protein', 'urine_acetone', 'urine_volume'];
+        // Add liquor and moulding to text-based for more explicit tutoring
+        const textBasedTypes = ['temp', 'drugs', 'oxytocin', 'urine_protein', 'urine_acetone', 'urine_volume', 'liquor', 'moulding'];
         
-        app.scenario.mcqOptions.innerHTML = ''; // Clear previous inputs/mcqs
+        app.scenario.mcqOptions.innerHTML = '';
+        app.scenario.plotTools.style.display = 'none'; // Ensure this is always hidden in tutor mode flow.
 
         if (textBasedTypes.includes(action.type)) {
             // --- HANDLE TEXT-BASED INPUT ---
             app.partogram.svg.classList.remove('interactive');
-            app.scenario.plotTools.style.display = 'none';
             setInstructions(`Enter the data for <strong>${action.label}</strong> at Hour ${action.data.time}.`, 'prompt');
             
             const mcqContainer = app.scenario.mcqOptions;
@@ -1845,7 +1859,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         ul: document.getElementById('tutor-oxy-ul').value,
                         rate: document.getElementById('tutor-oxy-rate').value
                     };
-                    isCorrect = userValue.ul.trim() === action.data.value.ul.trim() && userValue.rate.trim() === action.data.value.rate.trim();
+                    // A bit lenient on string comparison
+                    isCorrect = userValue.ul.trim() == action.data.value.ul && userValue.rate.trim() == action.data.value.rate;
                 } else {
                     userValue = document.getElementById('tutor-text-input').value;
                     isCorrect = userValue.trim().toLowerCase() === String(action.data.value).trim().toLowerCase();
@@ -1857,28 +1872,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     state.currentPlotActionIndex++;
                     setTimeout(handlePlotAction, 800);
                 } else {
-                    setInstructions(`That's not the correct value. The correct value was <strong>'${JSON.stringify(action.data.value)}'</strong>. Please try again.`, 'error');
+                    setInstructions(`That's not the correct value. The correct value was <strong>'${JSON.stringify(action.data.value)}'</strong>. Please review the case details and try again.`, 'error');
                 }
             };
+            // Auto-focus on the input
+            const inputEl = document.getElementById('tutor-text-input') || document.getElementById('tutor-oxy-ul');
+            if (inputEl) inputEl.focus();
 
         } else {
             // --- HANDLE GRAPHICAL PLOT ---
-            const instruction = `Select the <strong>${action.symbol || 'correct'}</strong> tool. Plot ${action.label} at <strong>${JSON.stringify(action.data.value)}</strong> for <strong>Hour ${action.data.time}</strong>.`
+            // This handles dilation, descent, fhr, contractions, pulse, bp
+            const instruction = `Now, please click on the chart to plot <strong>${action.label}</strong>. The correct value is <strong>${typeof action.data.value === 'object' ? JSON.stringify(action.data.value) : action.data.value}</strong> at <strong>Hour ${action.data.time}</strong>.`;
             setInstructions(instruction, 'prompt');
             app.partogram.svg.classList.add('interactive');
             
-            if (action.symbol) {
-                app.scenario.plotTools.style.display = 'block';
-                const currentTool = app.scenario.plotTools.querySelector(`[data-symbol="${action.symbol}"]`);
-                if(currentTool && !currentTool.classList.contains('selected')) {
-                    app.scenario.plotTools.querySelectorAll('.tool-button').forEach(btn => btn.classList.remove('selected'));
-                    currentTool.classList.add('selected');
-                    state.selectedSymbol = action.symbol;
-                }
-            } else {
-                 app.scenario.plotTools.style.display = 'none';
-                 state.selectedSymbol = null;
-            }
+            // Programmatically set the symbol for validation, rather than asking user to click a tool
+            state.selectedSymbol = action.symbol || null;
         }
     }
 

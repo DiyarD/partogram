@@ -311,20 +311,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       },
       {
-        "time": 2,
-        "info": "<strong>Reassessment at 10:00 AM (T+2 hours).</strong><br>Two hours later, Maria has made excellent progress. She is now <strong>8cm</strong> dilated and the head has descended to just <strong>1/5 palpable</strong>. Her chart is updated for you.",
+        "time": 4,
+        "info": "<strong>Reassessment at 12:00 PM (T+4 hours).</strong><br>Initially, Maria made excellent progress. At T+2 hours, she was <strong>8cm</strong> dilated, with the head at <strong>1/5 palpable</strong> and <strong>4 strong contractions in 10</strong>. However, despite contractions becoming even more powerful (now <strong>5 in 10 minutes</strong>), Maria has made no progress in the last two hours. She remains <strong>8 cm</strong> dilated, and the head is still <strong>1/5 palpable</strong>. You note there is now <strong>severe moulding (3+)</strong> and the fetal heart rate has climbed to <strong>165 bpm</strong>. Her complete findings have been automatically plotted.",
         "prePlotActions": [
           { "type": "dilation", "data": { "time": 2, "value": 8 } },
           { "type": "descent", "data": { "time": 2, "value": 1 } },
           { "type": "contractions", "data": { "time": 2, "value": 4, "duration": "strong" } },
           { "type": "fhr", "data": { "time": 2, "value": 140 } },
-          { "type": "moulding", "data": { "time": 2, "value": 1 } }
-        ]
-      },
-      {
-        "time": 4,
-        "info": "<strong>Reassessment at 12:00 PM (T+4 hours).</strong><br>Despite having very powerful contractions, now <strong>5 in 10 minutes</strong>, Maria has made no progress in the last two hours. She remains <strong>8 cm</strong> dilated, and the head is still <strong>1/5 palpable</strong>. You note there is now <strong>severe moulding (3+)</strong> and the fetal heart rate has climbed to <strong>165 bpm</strong>. Her findings have been automatically plotted.",
-        "prePlotActions": [
+          { "type": "moulding", "data": { "time": 2, "value": 1 } },
           { "type": "dilation", "data": { "time": 4, "value": 8 } },
           { "type": "descent", "data": { "time": 4, "value": 1 } },
           { "type": "contractions", "data": { "time": 4, "value": 5, "duration": "strong" } },
@@ -437,20 +431,14 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     "steps": [
       {
-        "time": 0,
-        "info": "<strong>Labour Ward at 10:00 AM (T=0).</strong><br>You are asked to review Chloe. She is <strong>7cm</strong> dilated, with the head <strong>1/5 palpable</strong>. Contractions are <strong>strong, 4 in 10</strong>. The FHR is <strong>150 bpm</strong> and membranes are <strong>intact</strong>. The decision is made to perform an ARM at 10:01 AM. Her current data is shown.",
+        "time": 0.02,
+        "info": "<strong>Emergency at 10:01 AM.</strong><br>At 10:00 AM, Chloe was <strong>7cm</strong> dilated, head <strong>1/5 palpable</strong>, with <strong>strong, 4 in 10</strong> contractions and a FHR of <strong>150 bpm</strong>. Her membranes were <strong>intact</strong>. An ARM was performed. Immediately after, there is a gush of fluid followed by bright red vaginal bleeding. The liquor is now considered <strong>'B' for bloody</strong>. Simultaneously, the CTG trace plummets to <strong>60 bpm</strong>. All these events have been plotted for you.",
         "prePlotActions": [
           { "type": "dilation", "data": { "time": 0, "value": 7 } },
           { "type": "descent", "data": { "time": 0, "value": 1 } },
           { "type": "contractions", "data": { "time": 0, "value": 4, "duration": "strong" } },
           { "type": "fhr", "data": { "time": 0, "value": 150 } },
-          { "type": "liquor", "data": { "time": 0, "value": "I" } }
-        ]
-      },
-      {
-        "time": 0.02,
-        "info": "<strong>Emergency at 10:01 AM.</strong><br>Immediately after the ARM, there is a gush of fluid followed by bright red vaginal bleeding. Simultaneously, the CTG trace plummets.",
-        "prePlotActions": [
+          { "type": "liquor", "data": { "time": 0, "value": "I" } },
           { "type": "liquor", "data": { "time": 0.02, "value": "B" } },
           { "type": "fhr", "data": { "time": 0.02, "value": 60 } }
         ],
@@ -558,18 +546,14 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     "steps": [
       {
-        "time": 0,
-        "info": "<strong>Second Stage Start at 04:00 AM (T=0).</strong><br>You're handed over Emily, who has just been confirmed as fully dilated at <strong>10cm</strong>. The head is <strong>1/5 palpable</strong>, contractions are <strong>strong, 4 in 10</strong>, and the FHR is <strong>140</strong>. Her findings are plotted as she begins active pushing.",
+        "time": 1.5,
+        "info": "<strong>Review at 05:30 AM (T+1.5 hours).</strong><br>At 04:00 AM (T=0), Emily was confirmed as fully dilated at <strong>10cm</strong>, with the head <strong>1/5 palpable</strong>, <strong>strong, 4 in 10</strong> contractions, and an FHR of <strong>140</strong>. These findings have been plotted for you. After 90 minutes of pushing, Emily is visibly exhausted. Her pushing efforts are less effective, and her contractions have weakened to <strong>3 in 10 minutes and moderate strength</strong>. The baby's head has descended to the perineum and is now <strong>0/5 palpable</strong>, but there is now <strong>2+ of moulding</strong>. The fetal heart rate is stable at <strong>135 bpm</strong>. Please plot the current findings.",
         "prePlotActions": [
           { "type": "dilation", "data": { "time": 0, "value": 10 } },
           { "type": "descent", "data": { "time": 0, "value": 1 } },
           { "type": "contractions", "data": { "time": 0, "value": 4, "duration": "strong" } },
           { "type": "fhr", "data": { "time": 0, "value": 140 } }
-        ]
-      },
-      {
-        "time": 1.5,
-        "info": "<strong>Review at 05:30 AM (T+1.5 hours).</strong><br>After 90 minutes of pushing, Emily is visibly exhausted. Her pushing efforts are less effective, and her contractions have weakened to <strong>3 in 10 minutes and moderate strength</strong>. The baby's head has descended to the perineum and is now <strong>0/5 palpable</strong>, but there is now <strong>2+ of moulding</strong>. The fetal heart rate is stable at <strong>135 bpm</strong>. Please plot the current findings.",
+        ],
         "task": {
           "type": "interactivePlot",
           "actions": [
@@ -831,8 +815,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ]
   }
 ]
-
-
 // --- DOM ELEMENTS & STATE --- //
     const app = {
         modeSelector: document.getElementById('mode-selector'),

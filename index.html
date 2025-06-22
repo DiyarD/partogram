@@ -44,6 +44,7 @@
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             overflow: hidden;
+            position: relative; /* Added for absolute positioning of child elements */
         }
         
         header {
@@ -92,15 +93,41 @@
         
         #plot-tools { display: none; margin-bottom: 15px; }
         #test-mode-tools { display: none; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
-        #tool-options-panel { display: none; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; align-items: center;}
+        #tool-options-panel { display: none; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; align-items: center; background: white; padding: 12px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); border: 1px solid var(--border-color); }
         .refine-input { font-family: 'Source Code Pro', monospace; padding: 4px 8px; border: 1px solid var(--border-color); border-radius: 4px; width: 70px; }
         .tool-button { padding: 8px 12px; font-size: 0.9em; font-family: 'Roboto', sans-serif; font-weight: 500; border: 1px solid var(--border-color); background: #fff; cursor: pointer; border-radius: 5px; transition: all 0.2s; }
         .tool-button:hover { border-color: var(--accent-color); background-color: #eff6ff;}
         .tool-button.selected { background-color: var(--accent-color); color: #fff; border-color: var(--accent-dark); }
         .tool-button .symbol { font-family: monospace; font-weight: bold; font-size: 1.2em; margin-right: 5px; }
+        .tool-button.plotted { border-color: var(--success-color); background-color: #f0fdf4; font-weight: bold; color: var(--success-color); }
+        .tool-button.plotted:after { content: ' ✓'; }
+        .tool-button.plotted:hover { background-color: #dcfce7; border-color: #15803d; }
 
-        .mcq-options button { display: block; width: 100%; padding: 12px; margin-top: 8px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--white-color); text-align: left; font-size: 1em; cursor: pointer; transition: all 0.2s ease; }
-        .mcq-options button:hover:not(:disabled) { background-color: #eff6ff; border-color: var(--accent-color); }
+
+        .mcq-options button {
+            display: block;
+            width: 100%;
+            padding: 12px 16px;
+            margin-top: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--white-color);
+            text-align: left;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            line-height: 1.4;
+        }
+        .mcq-options button strong {
+            color: var(--accent-color);
+            margin-right: 8px;
+        }
+        .mcq-options button:hover:not(:disabled) {
+            background-color: #eff6ff;
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
         .mcq-options button:disabled { cursor: not-allowed; opacity: 0.7; }
         .mcq-options button.correct { background-color: #dcfce7 !important; border-color: var(--success-color) !important; font-weight: bold; }
         .mcq-options button.incorrect { background-color: #fee2e2 !important; border-color: var(--danger-color) !important; }
@@ -132,6 +159,26 @@
         
         .key-point { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 10px; margin: 15px 0; }
         .key-point ul { padding-left: 20px; }
+        
+        /* New "About" section styles */
+        .about-section {
+            text-align: left;
+            max-width: 600px;
+            margin: 30px auto 20px auto;
+            padding: 15px;
+            background: #f8fafc;
+            border-left: 4px solid var(--accent-color);
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+        .about-section h3 {
+            margin-bottom: 10px;
+            color: var(--accent-dark);
+        }
+        .about-section p {
+            margin-bottom: 5px;
+        }
+
     </style>
 </head>
 <body>
@@ -141,8 +188,22 @@
 
         <div id="mode-selector">
             <h2>Select a Training Mode</h2>
-            <button class="mode-button" data-mode="tutor">Tutor Mode (Guided Step-by-Step)</button>
+            <!-- <button class="mode-button" data-mode="tutor">Tutor Mode (Guided Step-by-Step)</button> -->
             <button class="mode-button" data-mode="test">Test Mode (Self-Directed Assessment)</button>
+        
+            <div class="about-section">
+                <h3>About this App</h3>
+                <p>
+                    This application is an experimental tool designed to help medical students and junior doctors practice their partogram interpretation skills. 
+                    The clinical scenarios are based on common obstetric situations.
+                </p>
+                <p>
+                    <strong>Disclaimer:</strong> This is currently a developmental build. If you encounter any bugs, or find any information that you believe is clinically inaccurate, please get in touch.
+                </p>
+                <p>
+                    <strong>Contact:</strong> diyar.dlair.abdullah@gmail.com
+                </p>
+            </div>
         </div>
 
         <div id="scenario-selector" style="display: none;">
@@ -171,7 +232,7 @@
                         <button class="tool-button" data-symbol="O">O</button>
                     </div>
                     <div id="test-mode-tools"></div>
-                    <div id="tool-options-panel" style="display: none; margin-bottom: 15px; gap: 8px; flex-wrap: wrap;"></div>
+                    <div id="tool-options-panel" style="display: none;"></div>
                     <div id="task-instructions" class="prompt"></div>
                     <div id="mcq-options"></div>
                     <div id="feedback-panel"></div>
@@ -919,6 +980,7 @@ document.addEventListener('DOMContentLoaded', () => {
             val: (y) => (((Y_POS.maternal_start + Y_POS.maternal_h - y) / Y_POS.maternal_h) * 140) + 50
         },
         temp: {
+            y: (t) => Y_POS.temp_start + Y_POS.temp_h - (((t - 35) / 5) * Y_POS.temp_h),
             val: (y) => (((Y_POS.temp_start + Y_POS.temp_h - y) / Y_POS.temp_h) * 5) + 35
         },
         time: {
@@ -1139,8 +1201,8 @@ document.addEventListener('DOMContentLoaded', () => {
                  elGroup.appendChild(createSvgElement('line', { x1: x-5, y1: y2, x2: x+5, y2: y2, stroke: COLORS.accentDark, 'stroke-width': 3 }));
                  break;
             case 'temp':
-                 el = createSvgElement('circle', { cx: x + G.col_w / 2, cy: Y_POS.temp_start + Y_POS.temp_h/2, r: 4, fill: COLORS.dangerColor});
-                 elGroup.appendChild(drawText(data.value.toFixed(1), x + G.col_w, Y_POS.temp_start + Y_POS.temp_h/2, { 'font-size': '12px', 'text-anchor': 'end' }));
+                 el = createSvgElement('circle', { cx: x, cy: scale.temp.y(data.value), r: 4, fill: COLORS.dangerColor});
+                 elGroup.appendChild(drawText(data.value.toFixed(1), x + G.col_w, scale.temp.y(data.value), { 'font-size': '12px', 'text-anchor': 'end' }));
                  break;
         }
         if (el) elGroup.appendChild(el);
@@ -1183,7 +1245,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state.mode === 'tutor' && svg.classList.contains('interactive')) {
             handleTutorPlot(svgP, clickedTime);
         } else if (state.mode === 'test' && state.pendingPlot && svg.classList.contains('interactive')) {
-            handleTestPlotClick(svgP, clickedTime);
+            handleTestPlotClick(event, svgP, clickedTime);
         }
     }
 
@@ -1212,7 +1274,7 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'bp': valueIsCorrect = svgP.y > Y_POS.maternal_start && svgP.y < Y_POS.maternal_start + Y_POS.maternal_h; break;
             case 'liquor': valueIsCorrect = svgP.y > Y_POS.liquor_start && svgP.y < Y_POS.liquor_start + Y_POS.liquor_h; break;
             case 'moulding': valueIsCorrect = svgP.y > Y_POS.moulding_start && svgP.y < Y_POS.moulding_start + Y_POS.moulding_h; break;
-            case 'temp': valueIsCorrect = svgP.y > Y_POS.temp_start && svgP.y < Y_POS.temp_start + Y_POS.temp_h; break;
+            // temp is now text based
             // Text-based entries are handled by handlePlotAction, not here.
             default: valueIsCorrect = false;
         }
@@ -1355,7 +1417,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const optionsPanel = app.scenario.toolOptionsPanel;
         optionsPanel.innerHTML = '';
-        optionsPanel.style.display = 'none';
+        // Hide panel initially, will be shown on click for interactive tools
+        optionsPanel.style.display = 'none'; 
+        // Reset positioning styles
+        optionsPanel.style.position = '';
+        optionsPanel.style.left = '';
+        optionsPanel.style.top = '';
 
         // Set up the pending plot state
         state.pendingPlot = { ...action };
@@ -1403,7 +1470,7 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'contractions': setInstructions(`First, select the contraction strength.`, 'prompt'); createOptionButtons(['weak', 'moderate', 'strong'], 'duration'); break;
             case 'pulse': requireClick(`Click on the chart to set an initial <strong>Pulse</strong> value. You can refine it after.`); break;
             case 'bp': state.plotSubState = 'awaiting_systolic'; requireClick(`Plotting BP: Click to set <strong>Systolic</strong> pressure at Hour ${action.data.time}.`); break;
-            case 'temp': requireClick(`Click in the temp row at Hour ${action.data.time} to plot temperature.`); break;
+            case 'temp': requireClick(`Click in the temp row at Hour ${action.data.time} to plot temperature. You can refine it after.`); break;
             case 'oxytocin':
             case 'drugs':
             case 'urine_protein':
@@ -1426,24 +1493,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function handleTestPlotClick(svgP, clickedTime) {
+    function handleTestPlotClick(event, svgP, clickedTime) {
         if (!state.pendingPlot) return;
         const action = state.pendingPlot;
         const stepTime = action.data.time;
+        const svg = app.partogram.svg;
         
+        const hideTempMarker = () => {
+            const marker = svg.querySelector('#temp-click-marker');
+            if (marker) marker.remove();
+        };
+
         const finalizePlot = (finalAction) => {
+            hideTempMarker();
             plotDataPoint(finalAction, 'test');
             state.testModeUserPlots.push(finalAction);
             
             const toolButton = app.scenario.testModeTools.querySelector(`[data-tool-type="${finalAction.type}"]`);
             if (toolButton) {
-                toolButton.disabled = true;
+                toolButton.classList.add('plotted');
                 toolButton.classList.remove('selected');
             }
             
             app.partogram.svg.classList.remove('interactive');
-            app.scenario.toolOptionsPanel.innerHTML = '';
-            app.scenario.toolOptionsPanel.style.display = 'none';
+            const optionsPanel = app.scenario.toolOptionsPanel;
+            optionsPanel.innerHTML = '';
+            optionsPanel.style.display = 'none';
+            optionsPanel.style.position = '';
+            optionsPanel.style.left = '';
+            optionsPanel.style.top = '';
+
             app.navigation.verifyButton.disabled = false;
             state.pendingPlot = null;
             state.plotSubState = null;
@@ -1455,6 +1534,26 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const showRefinePanel = () => {
+            const optionsPanel = app.scenario.toolOptionsPanel;
+            const appContainer = document.getElementById('app-container');
+            const appRect = appContainer.getBoundingClientRect();
+            optionsPanel.style.position = 'absolute';
+            optionsPanel.style.left = (event.clientX - appRect.left + 15) + 'px';
+            optionsPanel.style.top = (event.clientY - appRect.top + 15) + 'px';
+            optionsPanel.style.zIndex = '100';
+            optionsPanel.style.display = 'flex';
+        };
+
+        const showTempMarker = () => {
+            hideTempMarker(); // Remove old one first
+            const tempMarker = createSvgElement('circle', {
+                id: 'temp-click-marker', cx: svgP.x, cy: svgP.y, r: 6,
+                fill: 'rgba(220, 38, 38, 0.7)', stroke: 'white', 'stroke-width': 2,
+                style: 'pointer-events: none;'
+            });
+            svg.appendChild(tempMarker);
+        };
 
         let userAction = JSON.parse(JSON.stringify(action));
 
@@ -1467,19 +1566,43 @@ document.addEventListener('DOMContentLoaded', () => {
                 userAction.data.value = Math.round(scale.descent.val(svgP.y));
                 finalizePlot(userAction);
                 break;
-            case 'fhr': {
-                const val = Math.round(scale.fhr.val(svgP.y) / 5) * 5; // Snap to nearest 5
-                const optionsPanel = app.scenario.toolOptionsPanel;
-                optionsPanel.style.display = 'flex';
-                setInstructions('Refine the FHR value if needed and confirm.', 'prompt');
+            case 'fhr':
+            case 'pulse':
+            case 'temp': {
+                showTempMarker();
+                let val, inputId, label;
+                if(userAction.type === 'fhr') {
+                    val = Math.round(scale.fhr.val(svgP.y) / 5) * 5;
+                    inputId = 'refine-fhr';
+                    label = 'FHR';
+                } else if (userAction.type === 'pulse') {
+                    val = Math.round(scale.vitals.val(svgP.y));
+                    inputId = 'refine-pulse';
+                    label = 'Pulse';
+                } else { // temp
+                    val = scale.temp.val(svgP.y).toFixed(1);
+                    inputId = 'refine-temp';
+                    label = 'Temp';
+                }
+                
+                showRefinePanel();
+                setInstructions(`Refine the ${label} value if needed and confirm.`, 'prompt');
                 app.partogram.svg.classList.remove('interactive');
-                optionsPanel.innerHTML = `
-                    <label for="refine-fhr" style="margin-right: 5px;">FHR:</label>
-                    <input type="number" id="refine-fhr" value="${val}" class="refine-input">
-                    <button id="confirm-fhr" class="tool-button">Confirm</button>`;
-                document.getElementById('confirm-fhr').onclick = () => {
-                    userAction.data.value = parseInt(document.getElementById('refine-fhr').value, 10);
+                app.scenario.toolOptionsPanel.innerHTML = `
+                    <label for="${inputId}" style="margin-right: 5px;">${label}:</label>
+                    <input type="number" id="${inputId}" value="${val}" class="refine-input" step="${userAction.type === 'temp' ? '0.1' : '1'}">
+                    <button id="confirm-${userAction.type}" class="tool-button">Confirm</button>
+                    <button id="cancel-${userAction.type}" class="tool-button" style="background-color: #fee2e2;">X</button>
+                `;
+                document.getElementById(`confirm-${userAction.type}`).onclick = () => {
+                    userAction.data.value = parseFloat(document.getElementById(inputId).value);
                     finalizePlot(userAction);
+                };
+                 document.getElementById(`cancel-${userAction.type}`).onclick = () => {
+                    hideTempMarker();
+                    app.scenario.toolOptionsPanel.style.display = 'none';
+                    app.partogram.svg.classList.add('interactive');
+                    setInstructions(`Plot for ${label} cancelled. Click again to plot.`, 'prompt');
                 };
                 break;
             }
@@ -1499,24 +1622,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 userAction.data.duration = userAction.duration;
                 finalizePlot(userAction);
                 break;
-            case 'pulse': {
-                const val = Math.round(scale.vitals.val(svgP.y));
-                const optionsPanel = app.scenario.toolOptionsPanel;
-                optionsPanel.style.display = 'flex';
-                setInstructions('Refine the value if needed and confirm.', 'prompt');
-                app.partogram.svg.classList.remove('interactive');
-                optionsPanel.innerHTML = `
-                    <label for="refine-pulse" style="margin-right: 5px;">Pulse:</label>
-                    <input type="number" id="refine-pulse" value="${val}" class="refine-input">
-                    <button id="confirm-pulse" class="tool-button">Confirm</button>`;
-                document.getElementById('confirm-pulse').onclick = () => {
-                    userAction.data.value = parseInt(document.getElementById('refine-pulse').value, 10);
-                    finalizePlot(userAction);
-                };
-                break;
-            }
             case 'bp': {
-                const optionsPanel = app.scenario.toolOptionsPanel;
+                showTempMarker();
                 const v = Math.round(scale.vitals.val(svgP.y));
                 if (state.plotSubState === 'awaiting_systolic') {
                     state.pendingPlot.systolic = v;
@@ -1526,11 +1633,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     state.pendingPlot.diastolic = v;
                     app.partogram.svg.classList.remove('interactive');
                     setInstructions('Refine BP values and confirm.', 'prompt');
-                    optionsPanel.style.display = 'flex';
-                    // Ensure systolic is higher than diastolic
+                    showRefinePanel();
                     const s = Math.max(state.pendingPlot.systolic, state.pendingPlot.diastolic);
                     const d = Math.min(state.pendingPlot.systolic, state.pendingPlot.diastolic);
-                    optionsPanel.innerHTML = `
+                    app.scenario.toolOptionsPanel.innerHTML = `
                         <input type="number" id="refine-systolic" value="${s}" class="refine-input"> / 
                         <input type="number" id="refine-diastolic" value="${d}" class="refine-input">
                         <button id="confirm-bp" class="tool-button">Confirm</button>`;
@@ -1544,10 +1650,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 break;
             }
-            case 'temp':
-                 userAction.data.value = parseFloat(scale.temp.val(svgP.y).toFixed(1));
-                 finalizePlot(userAction);
-                 break;
         }
     }
 
@@ -1573,7 +1675,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 toolBtn.className = 'tool-button';
                 toolBtn.dataset.toolType = action.type;
                 toolBtn.innerHTML = action.label;
-                toolBtn.onclick = () => setupTool(action);
+                toolBtn.onclick = () => {
+                    if (toolBtn.classList.contains('plotted')) {
+                        const plotGroup = app.partogram.svg.querySelector(`g[data-plot-type='${action.type}'][data-source='test']`);
+                        if(plotGroup) plotGroup.remove();
+                        state.testModeUserPlots = state.testModeUserPlots.filter(p => p.type !== action.type);
+                        toolBtn.classList.remove('plotted', 'selected');
+                        setInstructions(`${action.label} has been reset. You can plot it again.`, 'prompt');
+                        if (state.testModeUserPlots.length === 0) {
+                            app.navigation.verifyButton.disabled = true;
+                        }
+                        state.pendingPlot = null; // Clear any pending plot state
+                        app.partogram.svg.classList.remove('interactive');
+                        app.scenario.toolOptionsPanel.style.display = 'none';
+
+                    } else {
+                        setupTool(action);
+                    }
+                };
                 toolsContainer.appendChild(toolBtn);
             });
             toolsContainer.style.display = 'flex';
@@ -1600,7 +1719,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (action.type === 'bp' || action.type === 'oxytocin') {
                     valueIsCorrect = JSON.stringify(userPlot.data.value) === JSON.stringify(action.data.value);
                 } else if (typeof action.data.value === 'string') {
-                    valueIsCorrect = userPlot.data.value.trim().toUpperCase() === action.data.value.trim().toUpperCase();
+                    valueIsCorrect = String(userPlot.data.value).trim().toUpperCase() === action.data.value.trim().toUpperCase();
                 } else if (typeof action.data.value === 'number') {
                      // Allow for some tolerance in click-based values
                     const tolerance = (action.type === 'fhr' || action.type === 'pulse') ? 5 : (action.type === 'temp' ? 0.5 : 1);
@@ -1634,7 +1753,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             app.scenario.feedbackPanel.className = 'feedback incorrect';
             setInstructions('Some plots were incorrect or missing. Review the feedback and try this step again.', 'error');
-            app.navigation.nextStepButton.disabled = false;
+            app.navigation.nextStepButton.disabled = false; // Let them proceed even if wrong, for learning.
             app.navigation.verifyButton.style.display = 'none';
         }
     }
@@ -1659,7 +1778,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         const action = plotActions[state.currentPlotActionIndex];
-        const textBasedTypes = ['drugs', 'oxytocin', 'urine_protein', 'urine_acetone', 'urine_volume'];
+        const textBasedTypes = ['temp', 'drugs', 'oxytocin', 'urine_protein', 'urine_acetone', 'urine_volume'];
         
         app.scenario.mcqOptions.innerHTML = ''; // Clear previous inputs/mcqs
 

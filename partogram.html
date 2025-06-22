@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partogram Interpretation</title>
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --main-text: #102a43;
+            --light-text: #486581;
+            --accent-color: #3b82f6;
+            --accent-dark: #2563eb;
+            --white-color: #ffffff;
+            --border-color: #cbd5e1;
+            --danger-color: #dc2626;
+            --warning-color: #f59e0b;
+            --success-color: #16a34a;
+            --disabled-color: #94a3b8;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Source+Code+Pro:wght@400;600&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--main-text);
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 1800px;
+            background: var(--white-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background-color: var(--accent-color);
+            color: var(--white-color);
+            padding: 16px 24px;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+
+        #main-content { display: flex; flex-direction: row; flex-wrap: wrap; }
+        #partogram-container { 
+            flex: 2.5; 
+            min-width: 800px; 
+            padding: 20px; 
+            border-right: 1px solid var(--border-color); 
+        }
+        #partogram-svg { 
+            width: 100%; 
+            height: auto; 
+            border: 1px solid var(--border-color); 
+            background-color: #fdfdfd;
+            display: block;
+        }
+        #partogram-svg.interactive { cursor: crosshair; }
+        #partogram-svg.test-mode-active.interactive { cursor: cell; }
+        #partogram-svg text {
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* IE10+/Edge */
+            user-select: none;         /* Standard */
+        }
+        #scenario-container { flex: 1; min-width: 400px; padding: 20px; display: flex; flex-direction: column; }
+
+        .panel { background-color: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+        .panel-title { font-size: 1.2em; font-weight: 700; color: var(--accent-dark); margin-bottom: 12px; border-bottom: 2px solid var(--accent-color); padding-bottom: 8px; }
+        #case-intro p, #step-info p { margin-bottom: 10px; }
+        #step-info strong { color: var(--accent-dark); }
+        #action-panel { background-color: var(--white-color); }
+
+        #task-instructions { padding: 12px; border-radius: 6px; margin-bottom: 10px; font-weight: 500; transition: background-color 0.3s, border-color 0.3s; }
+        #task-instructions.prompt { background-color: #e0f2fe; border-left: 4px solid var(--accent-color); }
+        #task-instructions.success { background-color: #dcfce7; border-left: 4px solid var(--success-color); }
+        #task-instructions.error { background-color: #fee2e2; border-left: 4px solid var(--danger-color); }
+        
+        #plot-tools { display: none; margin-bottom: 15px; }
+        #test-mode-tools { display: none; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
+        #tool-options-panel { display: none; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; align-items: center;}
+        .refine-input { font-family: 'Source Code Pro', monospace; padding: 4px 8px; border: 1px solid var(--border-color); border-radius: 4px; width: 70px; }
+        .tool-button { padding: 8px 12px; font-size: 0.9em; font-family: 'Roboto', sans-serif; font-weight: 500; border: 1px solid var(--border-color); background: #fff; cursor: pointer; border-radius: 5px; transition: all 0.2s; }
+        .tool-button:hover { border-color: var(--accent-color); background-color: #eff6ff;}
+        .tool-button.selected { background-color: var(--accent-color); color: #fff; border-color: var(--accent-dark); }
+        .tool-button .symbol { font-family: monospace; font-weight: bold; font-size: 1.2em; margin-right: 5px; }
+
+        .mcq-options button { display: block; width: 100%; padding: 12px; margin-top: 8px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--white-color); text-align: left; font-size: 1em; cursor: pointer; transition: all 0.2s ease; }
+        .mcq-options button:hover:not(:disabled) { background-color: #eff6ff; border-color: var(--accent-color); }
+        .mcq-options button:disabled { cursor: not-allowed; opacity: 0.7; }
+        .mcq-options button.correct { background-color: #dcfce7 !important; border-color: var(--success-color) !important; font-weight: bold; }
+        .mcq-options button.incorrect { background-color: #fee2e2 !important; border-color: var(--danger-color) !important; }
+
+        #feedback-panel { margin-top: 16px; padding: 12px; border-radius: 6px; font-size: 0.95em; display: none; }
+        #feedback-panel.correct { background-color: #e0f2fe; border: 1px solid #7dd3fc; color: #0c4a6e; }
+        #feedback-panel.incorrect { background-color: #ffedd5; border: 1px solid #fdba74; color: #7c2d12; }
+        #feedback-panel strong { display: block; margin-bottom: 5px; }
+        #feedback-panel ul { list-style-type: none; padding-left: 0; }
+        #feedback-panel ul li { padding: 4px; border-radius: 4px; margin-top: 4px; }
+        #feedback-panel ul li.fb-correct { background-color: #dcfce7; }
+        #feedback-panel ul li.fb-incorrect { background-color: #fee2e2; }
+        #feedback-panel ul li.fb-missing { background-color: #fef3c7; }
+
+        #navigation-panel { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
+        .nav-button { padding: 10px 20px; border: none; border-radius: 6px; background-color: var(--accent-color); color: var(--white-color); font-size: 1em; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
+        .nav-button:hover { background-color: var(--accent-dark); }
+        .nav-button:disabled { background-color: var(--disabled-color); cursor: not-allowed; }
+        
+        #results-screen { display: none; padding: 40px; text-align: center; }
+        #results-screen h2 { font-size: 2em; color: var(--accent-dark); margin-bottom: 20px; }
+        #results-summary { text-align: left; max-width: 800px; margin: 0 auto 30px auto; background: #f8fafc; padding: 20px; border-radius: 8px; border-left: 5px solid var(--accent-color); }
+        #results-summary h3 { margin-top: 15px; margin-bottom: 5px; color: var(--accent-dark); }
+
+        #mode-selector, #scenario-selector { padding: 40px; text-align: center; }
+        #mode-selector h2, #scenario-selector h2 { margin-bottom: 20px; }
+        .mode-button, .scenario-button { display: block; width: 80%; max-width: 500px; margin: 10px auto; padding: 15px; font-size: 1.1em; cursor: pointer; background: var(--white-color); border: 1px solid var(--accent-color); color: var(--accent-color); border-radius: 8px; transition: all 0.2s ease; }
+        .mode-button:hover, .scenario-button:hover { background: var(--accent-color); color: var(--white-color); }
+        
+        .key-point { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 10px; margin: 15px 0; }
+        .key-point ul { padding-left: 20px; }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <header>Partogram Interpretation</header>
+
+        <div id="mode-selector">
+            <h2>Select a Training Mode</h2>
+            <button class="mode-button" data-mode="tutor">Tutor Mode (Guided Step-by-Step)</button>
+            <button class="mode-button" data-mode="test">Test Mode (Self-Directed Assessment)</button>
+        </div>
+
+        <div id="scenario-selector" style="display: none;">
+            <h2>Select a Clinical Scenario</h2>
+        </div>
+
+        <div id="main-content" style="display: none;">
+            <div id="partogram-container">
+                <svg id="partogram-svg" viewBox="0 0 1200 1250" preserveAspectRatio="xMidYMid meet"></svg>
+            </div>
+            <div id="scenario-container">
+                <div id="case-info" class="panel">
+                    <h3 id="case-title" class="panel-title">Case Details</h3>
+                    <div id="case-intro"></div>
+                </div>
+
+                <div id="step-panel" class="panel">
+                    <h3 class="panel-title">Current Status</h3>
+                    <div id="step-info"></div>
+                </div>
+
+                <div id="action-panel" class="panel">
+                    <h3 id="action-title" class="panel-title">Your Task</h3>
+                    <div id="plot-tools">
+                        <button class="tool-button" data-symbol="X">X</button>
+                        <button class="tool-button" data-symbol="O">O</button>
+                    </div>
+                    <div id="test-mode-tools"></div>
+                    <div id="tool-options-panel" style="display: none; margin-bottom: 15px; gap: 8px; flex-wrap: wrap;"></div>
+                    <div id="task-instructions" class="prompt"></div>
+                    <div id="mcq-options"></div>
+                    <div id="feedback-panel"></div>
+                </div>
+                
+                <div id="navigation-panel">
+                    <button id="verify-button" class="nav-button" style="display: none;">Submit & Verify</button>
+                    <button id="next-step-button" class="nav-button" disabled>Next Step</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="results-screen">
+            <h2 id="results-title">Case Completed</h2>
+            <div id="results-summary"></div>
+            <button id="restart-button" class="nav-button">Choose Another Case</button>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- DATA: CLINICAL SCENARIOS --- //
+    const scenarios = [
+  {
+    "id": "scenario_01_power_failure",
+    "title": "Scenario 1: The Classic 'Power' Failure",
+    "introduction": "Sarah, a 29-year-old primigravida (G1P0) at 40+5 weeks gestation, presents in spontaneous labour. She has had an uncomplicated pregnancy. She reports regular, painful contractions for the last 8 hours.<br><br>You are the attending midwife. Please plot her initial admission findings.",
+    "finalSummary": {
+      "diagnosis": "Primary Dysfunctional Labour due to Inefficient Uterine Contractions",
+      "interpretation": "The partogram showed slow progress from the start of the active phase, with cervical dilatation of less than 1 cm/hour. The plot crossed the Alert Line at T+4 hours, mandating a full reassessment. The clinical findings of weak contractions with minimal moulding pointed towards a 'Power' issue.",
+      "management": "Management correctly followed the standard algorithm. After reassessment at the Alert Line, Artificial Rupture of Membranes (ARM) was performed. When progress remained slow, oxytocin augmentation was commenced, as there was no evidence of obstruction. This led to improved contractions and a successful vaginal delivery.",
+      "learningPoints": [
+        "Primary Dysfunctional Labour is slow progress from the onset of the active phase.",
+        "Crossing the Alert Line is a 'Warning Sign' that mandates reassessment of the '3 Ps' (Power, Passenger, Passage).",
+        "The most common cause of primary dysfunctional labour is inefficient uterine contractions ('Power').",
+        "The standard management for a confirmed 'Power' issue is sequential augmentation: first ARM, then oxytocin if needed."
+      ]
+    },
+    "steps": [
+      {
+        "time": 0,
+        "info": "<strong>Admission at 12:00 PM (T=0).</strong><br>You receive a handover from the admitting midwife: \"This is Sarah. On my initial assessment, she's coping well. Her vitals are stable: pulse is <strong>88</strong>, BP is <strong>120/75</strong>, and temp is <strong>37.0°C</strong>. The baby's heart rate is sitting around <strong>145 bpm</strong>. Abdominally, she's having about <strong>two moderate contractions every ten minutes</strong>. On VE, she's <strong>4 cm</strong> dilated, the head is <strong>3/5 palpable</strong>, membranes are <strong>intact</strong>, and there's <strong>no moulding</strong>. Could you please plot these findings?\"",
+        "task": {
+          "type": "interactivePlot",
+          "actions": [
+            { "type": "dilation", "label": "Dilation (X)", "symbol": "X", "prompt": "Cervical Dilation (cm)", "data": { "time": 0, "value": 4 } },
+            { "type": "descent", "label": "Descent (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 3 } },
+            { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 0, "value": 2, "duration": "moderate" } },
+            { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 145 } },
+            { "type": "liquor", "label": "Amniotic Fluid", "prompt": "Enter code (I, C, M, B)", "data": { "time": 0, "value": "I" } },
+            { "type": "moulding", "label": "Moulding", "prompt": "Enter grade (0-3)", "data": { "time": 0, "value": 0 } },
+            { "type": "pulse", "label": "Maternal Pulse", "prompt": "Enter pulse (bpm)", "data": { "time": 0, "value": 88 } },
+            { "type": "bp", "label": "Maternal BP", "prompt": "Enter BP (mmHg)", "data": { "time": 0, "value": { "systolic": 120, "diastolic": 75 } } },
+            { "type": "temp", "label": "Maternal Temp", "prompt": "Enter temperature (°C)", "data": { "time": 0, "value": 37.0 } }
+          ]
+        }
+      },
+      {
+        "time": 4,
+        "info": "<strong>Reassessment at 04:00 PM (T+4 hours).</strong><br>Four hours later, you reassess Sarah. Her progress has been slow. She is now <strong>5 cm</strong> dilated and the head has descended to <strong>2/5 palpable</strong>. Contractions are slightly more frequent at <strong>3 in 10 minutes</strong>, but still moderate. The FHR is <strong>140 bpm</strong>, and there is now <strong>1+ of moulding</strong>. Her pulse is <strong>90</strong> and BP is <strong>122/78</strong>. The partogram has been updated for you, and the plot has now crossed the Alert Line.",
+        "prePlotActions": [
+          { "type": "dilation", "data": { "time": 4, "value": 5 } },
+          { "type": "descent", "data": { "time": 4, "value": 2 } },
+          { "type": "contractions", "data": { "time": 4, "value": 3, "duration": "moderate" } },
+          { "type": "fhr", "data": { "time": 4, "value": 140 } },
+          { "type": "moulding", "data": { "time": 4, "value": 1 } },
+          { "type": "pulse", "data": { "time": 4, "value": 90 } },
+          { "type": "bp", "data": { "time": 4, "value": { "systolic": 122, "diastolic": 78 } } }
+        ],
+        "task": {
+          "type": "mcq",
+          "question": "The plot has crossed the Alert Line. Based on the clinical picture (weak contractions, minimal moulding), what is the most appropriate next step?",
+          "options": [
+            { "id": "A", "text": "Commence an oxytocin infusion immediately." },
+            { "id": "B", "text": "Perform an emergency Caesarean section." },
+            { "id": "C", "text": "Wait for another 2 hours and reassess." },
+            { "id": "D", "text": "Perform an Artificial Rupture of Membranes (ARM)." }
+          ],
+          "correctAnswer": "D",
+          "feedback": "<strong>Correct.</strong> Crossing the Alert Line triggers a reassessment of the 3 P's. The findings point to a 'Power' issue (inadequate contractions). The first step in augmentation for a 'Power' issue with intact membranes is ARM. Oxytocin would be the next step if ARM is insufficient."
+        }
+      },
+      {
+        "time": 6,
+        "info": "<strong>Reassessment at 06:00 PM (T+6 hours).</strong><br>It has been 2 hours since the ARM was performed. The liquor was noted to be <strong>clear</strong>. On reassessment, progress remains slow. She is now <strong>6 cm</strong> dilated, but the head is still <strong>2/5 palpable</strong>. Contractions remain at <strong>3 in 10 minutes, moderate strength</strong>. The plot is now approaching the Action Line.",
+        "prePlotActions": [
+          { "type": "dilation", "data": { "time": 6, "value": 6 } },
+          { "type": "descent", "data": { "time": 6, "value": 2 } },
+          { "type": "liquor", "data": { "time": 4.1, "value": "C" } },
+          { "type": "contractions", "data": { "time": 6, "value": 3, "duration": "moderate" } }
+        ],
+        "task": {
+          "type": "final_mcq",
+          "question": "Progress remains slow despite ARM and there are no signs of obstruction. What is the definitive next step in management?",
+          "options": [
+            { "id": "A", "text": "Commence an intravenous oxytocin infusion." },
+            { "id": "B", "text": "Prepare for instrumental delivery." },
+            { "id": "C", "text": "Discharge the patient to ambulate at home." },
+            { "id": "D", "text": "Perform an emergency Caesarean section." }
+          ],
+          "correctAnswer": "A",
+          "feedback": "<strong>Correct.</strong> Since ARM has not been sufficient to establish adequate progress and there are no contraindications (like obstruction), the next step in the standard algorithm is to augment labor with an oxytocin infusion under continuous CTG monitoring."
+        }
+      }
+    ]
+  },
+  {
+    "id": "scenario_02_secondary_arrest",
+    "title": "Scenario 2: The Deceptive Slowdown",
+    "introduction": "Maria, a 35-year-old G2P1 at 39 weeks, is in spontaneous labour. Her first baby was 3.2kg. She has diet-controlled gestational diabetes and an estimated fetal weight on a recent scan of 4.2 kg. Her membranes ruptured at home and the liquor was clear.<br><br>Please plot her findings at 08:00 AM.",
+    "finalSummary": {
+      "diagnosis": "Obstructed Labour due to Cephalopelvic Disproportion (CPD)",
+      "interpretation": "The partogram initially showed excellent progress, but then demonstrated a classic 'Secondary Arrest of Dilatation'. The plot became horizontal despite strong, efficient uterine contractions. This, combined with arrested fetal descent, severe moulding (3+), and emerging fetal tachycardia, is pathognomonic for mechanical obstruction.",
+      "management": "The key to managing this case is recognizing that the problem is not 'Power' but 'Passage/Passenger'. Augmentation with oxytocin would be extremely dangerous and risks uterine rupture. The only safe and appropriate management for confirmed obstructed labour is an emergency Caesarean section.",
+      "learningPoints": [
+        "Secondary arrest (normal progress, then stops) is highly suspicious for a 'Passage' or 'Passenger' problem.",
+        "Strong contractions + no progress + severe moulding = Obstruction.",
+        "Fetal tachycardia and loss of variability are signs of developing fetal hypoxia due to obstruction.",
+        "Oxytocin is ABSOLUTELY CONTRAINDICATED in the presence of suspected or confirmed mechanical obstruction."
+      ]
+    },
+    "steps": [
+      {
+        "time": 0,
+        "info": "<strong>Admission at 08:00 AM (T=0).</strong><br>You review the admission note for Maria. It reads: \"Patient contracting strongly, <strong>3 in 10</strong>. On VE, cervix is <strong>5 cm</strong> dilated, head <strong>2/5 palpable</strong>. Liquor is <strong>clear</strong>. Mild <strong>moulding (1+)</strong> noted. FHR baseline is <strong>130 bpm</strong>.\" Please plot these findings.",
+        "task": {
+          "type": "interactivePlot",
+          "actions": [
+            { "type": "dilation", "label": "Dilation (X)", "symbol": "X", "prompt": "Cervical Dilation (cm)", "data": { "time": 0, "value": 5 } },
+            { "type": "descent", "label": "Descent (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 2 } },
+            { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 0, "value": 3, "duration": "strong" } },
+            { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 130 } },
+            { "type": "liquor", "label": "Amniotic Fluid", "prompt": "Enter code (I, C, M, B)", "data": { "time": 0, "value": "C" } },
+            { "type": "moulding", "label": "Moulding", "prompt": "Enter grade (0-3)", "data": { "time": 0, "value": 1 } }
+          ]
+        }
+      },
+      {
+        "time": 2,
+        "info": "<strong>Reassessment at 10:00 AM (T+2 hours).</strong><br>Two hours later, Maria has made excellent progress. She is now <strong>8cm</strong> dilated and the head has descended to just <strong>1/5 palpable</strong>. Her chart is updated for you.",
+        "prePlotActions": [
+          { "type": "dilation", "data": { "time": 2, "value": 8 } },
+          { "type": "descent", "data": { "time": 2, "value": 1 } },
+          { "type": "contractions", "data": { "time": 2, "value": 4, "duration": "strong" } },
+          { "type": "fhr", "data": { "time": 2, "value": 140 } },
+          { "type": "moulding", "data": { "time": 2, "value": 1 } }
+        ]
+      },
+      {
+        "time": 4,
+        "info": "<strong>Reassessment at 12:00 PM (T+4 hours).</strong><br>Despite having very powerful contractions, now <strong>5 in 10 minutes</strong>, Maria has made no progress in the last two hours. She remains <strong>8 cm</strong> dilated, and the head is still <strong>1/5 palpable</strong>. You note there is now <strong>severe moulding (3+)</strong> and the fetal heart rate has climbed to <strong>165 bpm</strong>. Her findings have been automatically plotted.",
+        "prePlotActions": [
+          { "type": "dilation", "data": { "time": 4, "value": 8 } },
+          { "type": "descent", "data": { "time": 4, "value": 1 } },
+          { "type": "contractions", "data": { "time": 4, "value": 5, "duration": "strong" } },
+          { "type": "fhr", "data": { "time": 4, "value": 165 } },
+          { "type": "moulding", "data": { "time": 4, "value": 3 } }
+        ],
+        "task": {
+          "type": "final_mcq",
+          "question": "Given this classic picture of secondary arrest with evidence of obstruction, what is the definitive management plan?",
+          "options": [
+            { "id": "A", "text": "Augment with a high-dose oxytocin infusion." },
+            { "id": "B", "text": "Perform an emergency Caesarean section." },
+            { "id": "C", "text": "Administer an epidural to help her relax." },
+            { "id": "D", "text": "Prepare for an instrumental delivery." }
+          ],
+          "correctAnswer": "B",
+          "feedback": "<strong>Correct.</strong> This is an obstetric emergency. The combination of strong contractions with arrested progress and signs of obstruction (severe moulding, fetal distress) confirms obstructed labour. Augmentation with oxytocin is contraindicated and dangerous. The only safe option is an emergency C-section."
+        }
+      }
+    ]
+  },
+  {
+    "id": "scenario_03_vbac_rupture",
+    "title": "Scenario 3: The VBAC Emergency",
+    "introduction": "Aisha, a 34-year-old G2P1 at 40 weeks, is attempting a Trial of Labour After Caesarean (TOLAC/VBAC). Her previous C-section was for a breech presentation. As per protocol, she is on continuous CTG monitoring.<br><br>Her labour is progressing well. The chart has been updated to 02:30 PM (T+1.5h).",
+    "finalSummary": {
+      "diagnosis": "Uterine Rupture",
+      "interpretation": "The patient presented with the cardinal signs of uterine rupture during a VBAC attempt: a sudden, sharp, constant pain over the old scar, followed by cessation of contractions, loss of fetal station (the head moved up), and acute, profound fetal bradycardia. These signs are pathognomonic for this catastrophic event.",
+      "management": "Uterine rupture is one of the most severe obstetric emergencies. The only action is to call for immediate senior help (Code emergency) and proceed to an emergency laparotomy/Caesarean section without any delay. The goal is to deliver the fetus and repair the uterus (or perform a hysterectomy) as quickly as possible to save both mother and baby.",
+      "learningPoints": [
+        "The classic triad of uterine rupture is: 1) Sudden severe abdominal pain, 2) Loss of fetal station, and 3) Acute fetal compromise (often prolonged bradycardia).",
+        "Cessation of previously strong contractions is another key sign.",
+        "Uterine rupture is a major risk of VBAC (~0.5%), and the risk is higher with induction, especially with prostaglandins.",
+        "Management requires immediate recognition and emergency laparotomy. There is no time for lesser interventions."
+      ]
+    },
+    "steps": [
+      {
+        "time": 0,
+        "info": "<strong>Labour Ward at 01:00 PM (T=0).</strong><br>Aisha's TOLAC is underway. On assessment, she is <strong>6 cm</strong> dilated with the head <strong>2/5 palpable</strong>. She is having <strong>three moderate contractions every ten minutes</strong> and the liquor is <strong>clear</strong>. The baby's heart rate is a reassuring <strong>140 bpm</strong>. Please plot these findings.",
+        "task": {
+          "type": "interactivePlot",
+          "actions": [
+            { "type": "dilation", "label": "Dilation (X)", "symbol": "X", "prompt": "Cervical Dilation (cm)", "data": { "time": 0, "value": 6 } },
+            { "type": "descent", "label": "Descent (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 2 } },
+            { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 0, "value": 3, "duration": "moderate" } },
+            { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 140 } },
+            { "type": "liquor", "label": "Amniotic Fluid", "prompt": "Enter code (I, C, M, B)", "data": { "time": 0, "value": "C" } }
+          ]
+        }
+      },
+      {
+        "time": 1.5,
+        "info": "<strong>Event at 02:30 PM (T+1.5 hours).</strong><br>Labour has progressed well, and Aisha is now <strong>8cm</strong> dilated. Suddenly, she cries out with a sharp, constant, severe pain over her C-section scar, stating it feels like something 'popped'. Within minutes, you observe the previously strong contractions have stopped, and the fetal heart rate plummets from its baseline of <strong>135 bpm</strong>.",
+        "prePlotActions": [
+          { "type": "dilation", "data": { "time": 1.5, "value": 8 } },
+          { "type": "descent", "data": { "time": 1.5, "value": 1 } },
+          { "type": "contractions", "data": { "time": 1.5, "value": 4, "duration": "strong" } },
+          { "type": "fhr", "data": { "time": 1.5, "value": 135 } }
+        ],
+        "task": {
+          "type": "mcq",
+          "question": "A quick vaginal exam reveals the fetal head is now at -2 station (higher than before). Given the sudden pain, cessation of contractions, loss of station, and acute fetal bradycardia, what is the diagnosis?",
+          "options": [
+            { "id": "A", "text": "Placental Abruption" },
+            { "id": "B", "text": "Cord Prolapse" },
+            { "id": "C", "text": "Uterine Rupture" },
+            { "id": "D", "text": "Amniotic Fluid Embolism" }
+          ],
+          "correctAnswer": "C",
+          "feedback": "<strong>Correct.</strong> This is the classic, textbook presentation of a uterine rupture. Loss of station is a key differentiating sign from abruption. The immediate bradycardia following the pain is the most common presentation."
+        }
+      },
+      {
+        "time": 1.55,
+        "info": "<strong>Emergency at 02:32 PM.</strong> The diagnosis is uterine rupture. The fetus is in profound distress.",
+        "prePlotActions": [
+          { "type": "fhr", "data": { "time": 1.55, "value": 70 } },
+          { "type": "contractions", "data": { "time": 1.55, "value": 0, "duration": "weak" } }
+        ],
+        "task": {
+          "type": "final_mcq",
+          "question": "What is the single most appropriate and critical immediate action?",
+          "options": [
+            { "id": "A", "text": "Administer a tocolytic to relax the uterus." },
+            { "id": "B", "text": "Start an oxytocin infusion to restart contractions." },
+            { "id": "C", "text": "Hit the emergency buzzer and prepare for immediate emergency laparotomy." },
+            { "id": "D", "text": "Perform a speculum exam to assess for bleeding." }
+          ],
+          "correctAnswer": "C",
+          "feedback": "<strong>Correct.</strong> This is a catastrophic emergency requiring immediate delivery to save the baby and control maternal hemorrhage. Any delay for other assessments or interventions is inappropriate and dangerous."
+        }
+      }
+    ]
+  },
+  {
+    "id": "scenario_04_vasa_previa",
+    "title": "Scenario 4: The Rupture and the Red Flag",
+    "introduction": "Chloe, a 30-year-old G1P0 at 38 weeks, is in labour and progressing well. At 7cm dilated, with the fetal head at 0 station, the midwife decides to perform an Artificial Rupture of Membranes (ARM) to augment labour.",
+    "finalSummary": {
+      "diagnosis": "Ruptured Vasa Previa",
+      "interpretation": "The partogram was normal until the moment of ARM. The sudden onset of painless vaginal bleeding immediately following membrane rupture, coupled with a catastrophic and acute fetal bradycardia, is the pathognomonic triad for a ruptured vasa previa. The mother remaining hemodynamically stable is another key clue, as the blood loss is fetal, not maternal.",
+      "management": "This is a fetal emergency of the highest order. The fetus is exsanguinating. The only management is an immediate Category 1 Caesarean section to deliver the baby before irreversible hypoxic injury or death occurs. There is no role for conservative measures or further investigation.",
+      "learningPoints": [
+        "The classic triad of vasa previa is: 1) Rupture of Membranes, 2) Painless vaginal bleeding, 3) Acute fetal bradycardia/distress.",
+        "In vasa previa, the bleeding is purely fetal, hence the fetus decompensates rapidly while the mother remains stable.",
+        "Always be cautious when performing ARM, especially if the placental position is low-lying or uncertain.",
+        "Management is immediate emergency C-section. Time is critical."
+      ]
+    },
+    "steps": [
+      {
+        "time": 0,
+        "info": "<strong>Labour Ward at 10:00 AM (T=0).</strong><br>You are asked to review Chloe. She is <strong>7cm</strong> dilated, with the head <strong>1/5 palpable</strong>. Contractions are <strong>strong, 4 in 10</strong>. The FHR is <strong>150 bpm</strong> and membranes are <strong>intact</strong>. The decision is made to perform an ARM at 10:01 AM. Her current data is shown.",
+        "prePlotActions": [
+          { "type": "dilation", "data": { "time": 0, "value": 7 } },
+          { "type": "descent", "data": { "time": 0, "value": 1 } },
+          { "type": "contractions", "data": { "time": 0, "value": 4, "duration": "strong" } },
+          { "type": "fhr", "data": { "time": 0, "value": 150 } },
+          { "type": "liquor", "data": { "time": 0, "value": "I" } }
+        ]
+      },
+      {
+        "time": 0.02,
+        "info": "<strong>Emergency at 10:01 AM.</strong><br>Immediately after the ARM, there is a gush of fluid followed by bright red vaginal bleeding. Simultaneously, the CTG trace plummets.",
+        "prePlotActions": [
+          { "type": "liquor", "data": { "time": 0.02, "value": "B" } },
+          { "type": "fhr", "data": { "time": 0.02, "value": 60 } }
+        ],
+        "task": {
+          "type": "mcq",
+          "question": "The mother's vitals are stable, but the fetus has had an acute, severe bradycardia immediately following painless bleeding on ROM. What is the most likely diagnosis?",
+          "options": [
+            { "id": "A", "text": "Placenta Previa" },
+            { "id": "B", "text": "Placental Abruption" },
+            { "id": "C", "text": "Uterine Rupture" },
+            { "id": "D", "text": "Vasa Previa" }
+          ],
+          "correctAnswer": "D",
+          "feedback": "<strong>Correct.</strong> This triad of events is pathognomonic for a ruptured vasa previa. The bleeding is fetal blood from an unprotected vessel that was torn during the ARM, leading to rapid fetal exsanguination and distress."
+        }
+      },
+      {
+        "time": 0.03,
+        "info": "You have correctly identified a ruptured vasa previa.",
+        "task": {
+          "type": "final_mcq",
+          "question": "What is the single most appropriate management step?",
+          "options": [
+            { "id": "A", "text": "Proceed to immediate Category 1 Caesarean section." },
+            { "id": "B", "text": "Place the mother in the left lateral position and give oxygen." },
+            { "id": "C", "text": "Send an Apt test to confirm fetal blood." },
+            { "id": "D", "text": "Start an oxytocin infusion to speed up delivery." }
+          ],
+          "correctAnswer": "A",
+          "feedback": "<strong>Correct.</strong> This is a fetal emergency. Delivery must be immediate to prevent fetal death. While other resuscitative measures are good practice, they must not delay the definitive treatment, which is emergency delivery by C-section."
+        }
+      }
+    ]
+  },
+  {
+    "id": "scenario_05_oxytocin_hyperstim",
+    "title": "Scenario 5: Too Much of a Good Thing",
+    "introduction": "We return to Sarah from Scenario 1. Following ARM, she was started on an oxytocin infusion for slow progress. It is now 08:00 PM and she is 8cm dilated. You are reviewing the partogram and CTG.",
+    "finalSummary": {
+      "diagnosis": "Iatrogenic Uterine Hyperstimulation with Fetal Distress",
+      "interpretation": "The partogram showed uterine hyperstimulation (tachysystole), with contractions occurring more than 5 times in 10 minutes. This is a known and dangerous side effect of oxytocin. The reduced interval between contractions compromised placental blood flow, leading to fetal hypoxia. This was clearly demonstrated on the CTG as fetal tachycardia, reduced variability, and repetitive late decelerations.",
+      "management": "The most critical first step in management is to remove the offending agent by stopping the oxytocin infusion. This allows the uterus to relax and placental perfusion to improve. This is a key part of intrauterine resuscitation, which also includes maternal position change and IV fluids. If the CTG does not recover promptly, delivery must be expedited.",
+      "learningPoints": [
+        "Uterine hyperstimulation (tachysystole) is defined as >5 contractions in 10 minutes and is a major risk of oxytocin.",
+        "Hyperstimulation leads to fetal hypoxia, which manifests on the CTG as late decelerations, tachycardia, and reduced variability.",
+        "The first and most important action for iatrogenic hyperstimulation with fetal distress is to STOP the oxytocin infusion.",
+        "Always monitor with continuous CTG when a patient is on an oxytocin infusion."
+      ]
+    },
+    "steps": [
+      {
+        "time": 8,
+        "info": "<strong>Review at 08:00 PM (T+8 hours).</strong><br>You review Sarah's chart. She's now <strong>8cm</strong> dilated with the head at <strong>1/5 palpable</strong>. However, you note the oxytocin infusion has resulted in contractions now occurring <strong>6 times every 10 minutes</strong>. The FHR baseline has risen to <strong>170 bpm</strong>. Her partogram data has been updated.",
+        "prePlotActions": [
+          { "type": "dilation", "data": { "time": 8, "value": 8 } },
+          { "type": "descent", "data": { "time": 8, "value": 1 } },
+          { "type": "contractions", "data": { "time": 8, "value": 6, "duration": "strong" } },
+          { "type": "fhr", "data": { "time": 8, "value": 170 } }
+        ],
+        "task": {
+          "type": "mcq",
+          "question": "The CTG now shows minimal variability and repetitive late decelerations. Given the clinical context, what is the underlying cause?",
+          "options": [
+            { "id": "A", "text": "Maternal fever and infection." },
+            { "id": "B", "text": "Cephalopelvic disproportion." },
+            { "id": "C", "text": "Uterine hyperstimulation from oxytocin." },
+            { "id": "D", "text": "A normal physiological change." }
+          ],
+          "correctAnswer": "C",
+          "feedback": "<strong>Correct.</strong> The combination of an oxytocin infusion, >5 contractions in 10 minutes (hyperstimulation/tachysystole), and late decelerations on the CTG points directly to iatrogenic fetal distress caused by the medication."
+        }
+      },
+      {
+        "time": 8.01,
+        "info": "You have correctly identified that the oxytocin infusion is causing uterine hyperstimulation and fetal distress.",
+        "task": {
+          "type": "final_mcq",
+          "question": "What is your single most important IMMEDIATE action?",
+          "options": [
+            { "id": "A", "text": "Increase the oxytocin rate to overcome the distress." },
+            { "id": "B", "text": "Perform an urgent vaginal examination." },
+            { "id": "C", "text": "Stop the oxytocin infusion." },
+            { "id": "D", "text": "Call the anesthetist for an epidural." }
+          ],
+          "correctAnswer": "C",
+          "feedback": "<strong>Correct.</strong> The absolute first priority is to remove the cause of the problem. Stopping the oxytocin infusion is the fastest way to reduce uterine activity and improve placental blood flow. All other measures of intrauterine resuscitation are secondary to this."
+        }
+      }
+    ]
+  },
+  {
+    "id": "scenario_06_exhausted_pusher",
+    "title": "Scenario 6: The Exhausted Pusher",
+    "introduction": "Emily, a 25-year-old G1P0 at 41 weeks, reached full dilatation at 04:00 AM and began actively pushing. The fetal head was in an Occiput Anterior (OA) position. It is now 05:30 AM.",
+    "finalSummary": {
+      "diagnosis": "Prolonged Second Stage of Labour with Maternal Exhaustion",
+      "interpretation": "The patient was in the active second stage for 90 minutes. While initial progress was made, her contractions became less effective and she became physically exhausted, leading to an arrest of descent. The FHR remained reassuring with early decelerations, which are physiological in the second stage. There were no signs of obstruction.",
+      "management": "The prolonged second stage was due to a secondary 'Power' failure (maternal exhaustion). The criteria for a safe assisted vaginal delivery were met: Full dilatation, OA position, head well below the ischial spines (+2 station), and no suspected CPD. Therefore, expediting delivery with a ventouse or forceps was the most appropriate action to resolve the situation for both mother and fetus.",
+      "learningPoints": [
+        "A prolonged second stage in a nulliparous woman is typically defined as >2 hours of active pushing (or >3 with an epidural).",
+        "The decision to intervene depends on assessing the '3 Ps'. Here, the issue was 'Power' (exhaustion), not 'Passage' or 'Passenger'.",
+        "Know the criteria for assisted vaginal delivery (Forceps/Ventouse): Full dilatation, Ruptured membranes, Engaged/low head, Cephalic OA/OP, no CPD, Consent, adequate analgesia.",
+        "Maternal exhaustion is a valid indication for instrumental delivery."
+      ]
+    },
+    "steps": [
+      {
+        "time": 0,
+        "info": "<strong>Second Stage Start at 04:00 AM (T=0).</strong><br>You're handed over Emily, who has just been confirmed as fully dilated at <strong>10cm</strong>. The head is <strong>1/5 palpable</strong>, contractions are <strong>strong, 4 in 10</strong>, and the FHR is <strong>140</strong>. Her findings are plotted as she begins active pushing.",
+        "prePlotActions": [
+          { "type": "dilation", "data": { "time": 0, "value": 10 } },
+          { "type": "descent", "data": { "time": 0, "value": 1 } },
+          { "type": "contractions", "data": { "time": 0, "value": 4, "duration": "strong" } },
+          { "type": "fhr", "data": { "time": 0, "value": 140 } }
+        ]
+      },
+      {
+        "time": 1.5,
+        "info": "<strong>Review at 05:30 AM (T+1.5 hours).</strong><br>After 90 minutes of pushing, Emily is visibly exhausted. Her pushing efforts are less effective, and her contractions have weakened to <strong>3 in 10 minutes and moderate strength</strong>. The baby's head has descended to the perineum and is now <strong>0/5 palpable</strong>, but there is now <strong>2+ of moulding</strong>. The fetal heart rate is stable at <strong>135 bpm</strong>. Please plot the current findings.",
+        "task": {
+          "type": "interactivePlot",
+          "actions": [
+            { "type": "descent", "label": "Descent (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 1.5, "value": 0 } },
+            { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 1.5, "value": 3, "duration": "moderate" } },
+            { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 1.5, "value": 135 } },
+            { "type": "moulding", "label": "Moulding", "prompt": "Enter grade (0-3)", "data": { "time": 1.5, "value": 2 } }
+          ]
+        }
+      },
+      {
+        "time": 1.51,
+        "info": "The patient has a prolonged second stage with maternal exhaustion. The head is in OA position at +2 station (0/5 palpable). The CTG is reassuring.",
+        "task": {
+          "type": "final_mcq",
+          "question": "What is the most appropriate management at this point?",
+          "options": [
+            { "id": "A", "text": "Proceed to an emergency Caesarean section." },
+            { "id": "B", "text": "Perform an assisted vaginal delivery (forceps or ventouse)." },
+            { "id": "C", "text": "Allow another hour of pushing." },
+            { "id": "D", "text": "Start an oxytocin infusion." }
+          ],
+          "correctAnswer": "B",
+          "feedback": "<strong>Correct.</strong> The criteria for a safe instrumental delivery are met (full dilatation, head low in pelvis, OA position, no suspected obstruction). Given the maternal exhaustion and stalled progress, expediting delivery with forceps or ventouse is the most appropriate action."
+        }
+      }
+    ]
+  },
+  {
+    "id": "scenario_07_op_position",
+    "title": "Scenario 7: The Back-Breaking Labour",
+    "introduction": "Jessica, a 31-year-old G1P0 at 40 weeks, is admitted in labour. She complains of intense, unrelenting back pain that persists even between contractions. On initial vaginal examination, the diamond-shaped anterior fontanelle is easily felt, confirming an Occipito-Posterior (OP) position.",
+    "finalSummary": {
+      "diagnosis": "Slow Progress in Labour due to Persistent Occipito-Posterior (OP) Malposition",
+      "interpretation": "The partogram showed slow progress (crossing the Alert Line) despite the development of strong contractions. This pattern, combined with the initial finding of an OP position and a high fetal head, points to a 'Passenger' issue. The larger occipito-frontal diameter presented by the deflexed head struggles to navigate the pelvis, causing slow descent and dilatation.",
+      "management": "Management of a labour complicated by OP position is often expectant. The goal is to allow time for the fetal head to rotate. Key strategies include maternal repositioning (e.g., hands and knees) and ensuring adequate analgesia. Oxytocin can be used cautiously if contractions falter, but C-section is reserved for cases with confirmed arrest of progress or fetal distress.",
+      "learningPoints": [
+        "Severe, persistent back pain in labour is a classic sign of an OP position.",
+        "An OP position can be diagnosed on VE by palpating the large, diamond-shaped anterior fontanelle.",
+        "OP labours are often longer and associated with a higher rate of intervention due to the larger presenting diameter.",
+        "Management focuses on allowing time for rotation, maternal positioning, and judicious use of oxytocin if necessary."
+      ]
+    },
+    "steps": [
+      {
+        "time": 0,
+        "info": "<strong>Admission at 09:00 AM (T=0).</strong><br>You've confirmed Jessica's baby is in an OP position. On assessment, she is <strong>4 cm</strong> dilated, but the head is still very high at <strong>4/5 palpable</strong>. Contractions are <strong>moderate, 3 in 10</strong>, and the FHR is <strong>145 bpm</strong>. Please plot these initial findings.",
+        "task": {
+          "type": "interactivePlot",
+          "actions": [
+            { "type": "dilation", "label": "Dilation (X)", "symbol": "X", "prompt": "Cervical Dilation (cm)", "data": { "time": 0, "value": 4 } },
+            { "type": "descent", "label": "Descent (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 4 } },
+            { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 0, "value": 3, "duration": "moderate" } },
+            { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 145 } }
+          ]
+        }
+      },
+      {
+        "time": 4,
+        "info": "<strong>Review at 01:00 PM (T+4 hours).</strong><br>Four hours later, progress has been slow and the plot has crossed the Alert Line. The fetal head has descended to <strong>3/5 palpable</strong> and she is now <strong>6cm</strong> dilated. There is <strong>2+ moulding</strong>. Contractions are now <strong>strong, 4 in 10</strong>. The partogram has been updated for you.",
+        "prePlotActions": [
+          { "type": "dilation", "data": { "time": 4, "value": 6 } },
+          { "type": "descent", "data": { "time": 4, "value": 3 } },
+          { "type": "contractions", "data": { "time": 4, "value": 4, "duration": "strong" } },
+          { "type": "moulding", "data": { "time": 4, "value": 2 } }
+        ],
+        "task": {
+          "type": "final_mcq",
+          "question": "Progress is slow despite strong contractions, due to the known OP position. The CTG is reassuring. What is the most appropriate management approach at this time?",
+          "options": [
+            { "id": "A", "text": "Proceed immediately to Caesarean section for failure to progress." },
+            { "id": "B", "text": "Advise an epidural, encourage positional changes, and allow more time for rotation." },
+            { "id": "C", "text": "Start a high-dose oxytocin infusion to force the head down." },
+            { "id": "D", "text": "Attempt a manual rotation of the fetal head now." }
+          ],
+          "correctAnswer": "B",
+          "feedback": "<strong>Correct.</strong> Since the fetus is not distressed and some progress is being made, expectant management is appropriate. The focus should be on pain relief (epidural) and facilitating rotation through maternal movement. Intervention like C-section is premature, and high-dose oxytocin would be risky with a mechanical issue."
+        }
+      }
+    ]
+  },
+  {
+    "id": "scenario_08_prolonged_latent",
+    "title": "Scenario 8: The Waiting Game",
+    "introduction": "Laura, a 24-year-old G1P0 at 39+4 weeks, presents to the maternity assessment unit. She is exhausted and distressed, reporting painful, regular contractions for the last 22 hours.",
+    "finalSummary": {
+      "diagnosis": "Prolonged Latent Phase of Labour",
+      "interpretation": "The patient is not yet in the active phase of labour, as her cervix is less than 4 cm dilated. For a primigravida, a latent phase lasting more than 20 hours is defined as 'prolonged'. It is crucial to differentiate this from abnormal progress in the active phase. A partogram is not started until the active phase begins.",
+      "management": "The management of a prolonged latent phase is supportive, not interventional. The goal is to prevent maternal exhaustion and anxiety. This is achieved through 'therapeutic rest,' which involves reassurance, adequate hydration, and effective analgesia (often an opioid like morphine or pethidine) to allow the patient to rest or sleep. Active interventions like ARM or oxytocin are inappropriate and increase the risk of a subsequent C-section.",
+      "learningPoints": [
+        "The latent phase is from the onset of labour until the cervix is ~4 cm dilated.",
+        "A partogram is ONLY used for monitoring the ACTIVE phase of labour (≥4 cm).",
+        "A prolonged latent phase (>20h in primipara) is managed with supportive care and therapeutic rest, NOT active intervention.",
+        "Differentiating latent from active phase is a key clinical skill to avoid unnecessary medicalization of labour."
+      ]
+    },
+    "steps": [
+      {
+        "time": 0,
+        "info": "<strong>Initial Assessment.</strong><br>On examination, her cervix is <strong>2 cm</strong> dilated and 50% effaced. The fetal head is at -2 station. The CTG is reassuring. Contractions are moderate, occurring <strong>2-3 times in 10 minutes</strong>.",
+        "task": {
+          "type": "mcq",
+          "question": "What is the correct diagnosis for Laura's situation?",
+          "options": [
+            { "id": "A", "text": "Primary Arrest of Labour" },
+            { "id": "B", "text": "Obstructed Labour" },
+            { "id": "C", "text": "Prolonged Latent Phase" },
+            { "id": "D", "text": "False Labour" }
+          ],
+          "correctAnswer": "C",
+          "feedback": "<strong>Correct.</strong> She is having regular contractions but her cervix is <4 cm dilated. For a primigravida, this lasting over 20 hours is defined as a prolonged latent phase."
+        }
+      },
+      {
+        "time": 0.1,
+        "info": "You have correctly diagnosed a prolonged latent phase.",
+        "task": {
+          "type": "final_mcq",
+          "question": "What is the most appropriate management plan?",
+          "options": [
+            { "id": "A", "text": "Start a partogram and augment with oxytocin." },
+            { "id": "B", "text": "Perform an emergency C-section for failure to progress." },
+            { "id": "C", "text": "Advise therapeutic rest with analgesia (e.g., morphine) and hydration." },
+            { "id": "D", "text": "Perform an Artificial Rupture of Membranes (ARM)." }
+          ],
+          "correctAnswer": "C",
+          "feedback": "<strong>Correct.</strong> Active interventions are not indicated in the latent phase and can increase the risk of iatrogenic complications. The standard of care is supportive management to allow the mother to rest, conserve energy, and progress into the active phase naturally."
+        }
+      }
+    ]
+  },
+  {
+    "id": "scenario_09_normal_labour",
+    "title": "Scenario 9: The Perfect Picture",
+    "introduction": "Beth, a 32-year-old G2P1 at 39 weeks, is admitted in spontaneous labour. Her previous delivery was uncomplicated. You will monitor her progress through the active phase.",
+    "finalSummary": {
+      "diagnosis": "Normal Progress of Labour",
+      "interpretation": "The partogram demonstrates a model progression through the active phase of labour. Cervical dilatation occurred at a rate of ≥ 1 cm/hour, and the plot remained well to the left of the Alert Line. Fetal descent was progressive and appropriate. All maternal and fetal parameters remained reassuring throughout.",
+      "management": "The correct management in this case was supportive midwifery care without unnecessary intervention. The partogram served its purpose as a tool for reassurance, confirming that labour was progressing normally and safely. This highlights the importance of recognizing normal patterns to avoid the risks associated with unnecessary medicalization of a physiological process.",
+      "learningPoints": [
+        "Normal progress in the active phase is ≥ 1 cm of cervical dilatation per hour.",
+        "A partogram plot that stays to the left of the Alert Line indicates normal progress.",
+        "Progressive descent of the fetal head should accompany cervical dilatation.",
+        "Recognizing and trusting normal progress is as important as identifying abnormal patterns, preventing unnecessary interventions."
+      ]
+    },
+    "steps": [
+      {
+        "time": 0,
+        "info": "<strong>Admission at 02:00 PM (T=0).</strong><br>You admit Beth to the labour ward. Your initial assessment finds she is <strong>4 cm</strong> dilated, the head is <strong>3/5 palpable</strong>, and she is having <strong>3 moderate contractions every 10 minutes</strong>. The FHR is <strong>140 bpm</strong> and liquor is <strong>clear</strong>. Please plot these findings.",
+        "task": {
+          "type": "interactivePlot",
+          "actions": [
+            { "type": "dilation", "label": "Dilation (X)", "symbol": "X", "prompt": "Cervical Dilation (cm)", "data": { "time": 0, "value": 4 } },
+            { "type": "descent", "label": "Descent (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 3 } },
+            { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 0, "value": 3, "duration": "moderate" } },
+            { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 140 } },
+            { "type": "liquor", "label": "Amniotic Fluid", "prompt": "Enter code (I, C, M, B)", "data": { "time": 0, "value": "C" } }
+          ]
+        }
+      },
+      {
+        "time": 2,
+        "info": "<strong>Review at 04:00 PM (T+2 hours).</strong><br>Two hours have passed. On review, Beth is making excellent progress. She is now <strong>6 cm</strong> dilated, the head has descended to <strong>2/5 palpable</strong>, and contractions are now <strong>strong, 4 in 10</strong>. The FHR is stable at <strong>135 bpm</strong>. Please plot the updated findings.",
+        "task": {
+          "type": "interactivePlot",
+          "actions": [
+            { "type": "dilation", "label": "Dilation (X)", "symbol": "X", "prompt": "Cervical Dilation (cm)", "data": { "time": 2, "value": 6 } },
+            { "type": "descent", "label": "Descent (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 2, "value": 2 } },
+            { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 2, "value": 4, "duration": "strong" } },
+            { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 2, "value": 135 } }
+          ]
+        }
+      },
+      {
+        "time": 4,
+        "info": "<strong>Review at 06:00 PM (T+4 hours).</strong><br>Progress continues to be excellent. She is now <strong>9cm</strong> dilated, and the head is fully engaged at <strong>0/5 palpable</strong>. The plot is well to the left of the Alert Line. All parameters are reassuring.",
+        "prePlotActions": [
+          { "type": "dilation", "data": { "time": 4, "value": 9 } },
+          { "type": "descent", "data": { "time": 4, "value": 0 } },
+          { "type": "contractions", "data": { "time": 4, "value": 5, "duration": "strong" } },
+          { "type": "fhr", "data": { "time": 4, "value": 130 } }
+        ],
+        "task": {
+          "type": "final_mcq",
+          "question": "Based on the partogram, what is the appropriate course of action?",
+          "options": [
+            { "id": "A", "text": "Start oxytocin to speed up the last centimeter." },
+            { "id": "B", "text": "Perform an ARM if membranes are still intact." },
+            { "id": "C", "text": "Continue supportive midwifery care and routine monitoring." },
+            { "id": "D", "text": "Prepare for an imminent Caesarean section." }
+          ],
+          "correctAnswer": "C",
+          "feedback": "<strong>Correct.</strong> Labour is progressing normally and all findings are reassuring. There is no indication for any intervention. The role of the caregiver is to provide support and continue monitoring this physiological process."
+        }
+      }
+    ]
+  },
+  {
+    "id": "scenario_10_abruption_dic",
+    "title": "Scenario 10: The Stormy Abruption",
+    "introduction": "Karen, a 38-year-old G4P3 at 36 weeks with a history of chronic hypertension and smoking, is rushed to the labour ward. She reports a 1-hour history of constant, severe abdominal pain and a small amount of dark vaginal bleeding.",
+    "finalSummary": {
+      "diagnosis": "Severe Placental Abruption leading to Fetal Distress and Disseminated Intravascular Coagulation (DIC)",
+      "interpretation": "This is a classic presentation of a severe placental abruption. Key features included the risk factors (hypertension, smoking), the 'woody hard' and tender uterus, maternal shock (tachycardia, hypotension), and profound fetal distress (tachycardia, late decelerations). The port-wine stained liquor is another hallmark sign. The subsequent lab results confirmed the development of DIC, a known and life-threatening complication caused by the release of thromboplastin from the placental injury site.",
+      "management": "This is a dual maternal and fetal emergency. Management must be simultaneous: 1) Maternal resuscitation with the ABCDE approach, including aggressive fluid and blood product replacement. 2) Urgent delivery via emergency C-section to save the fetus and remove the source of the coagulopathy (the abrupting placenta). 3) Correction of the DIC with FFP, cryoprecipitate, and platelets, guided by lab results.",
+      "learningPoints": [
+        "Recognize the clinical syndrome of placental abruption: pain, rigid uterus, vaginal bleeding (which may be concealed), and maternal/fetal compromise.",
+        "Abruption is a clinical diagnosis; ultrasound is not reliable for ruling it out.",
+        "Severe abruption is a major cause of Disseminated Intravascular Coagulation (DIC).",
+        "Management is a two-pronged attack: resuscitate the mother and deliver the baby immediately."
+      ]
+    },
+    "steps": [
+      {
+        "time": 0,
+        "info": "<strong>Emergency Admission at 11:00 PM (T=0).</strong><br>On arrival, Karen is in distress, with a pulse of <strong>120</strong> and BP of <strong>100/60</strong>. Her abdomen is rigid ('woody') and exquisitely tender. A VE reveals she is <strong>7cm</strong> dilated, but the liquor is heavily <strong>blood-stained</strong>. The CTG is pathological with a baseline of <strong>170 bpm</strong> and uterine tachysystole. Her initial findings have been plotted.",
+        "prePlotActions": [
+          { "type": "dilation", "data": { "time": 0, "value": 7 } },
+          { "type": "fhr", "data": { "time": 0, "value": 170 } },
+          { "type": "contractions", "data": { "time": 0, "value": 7, "duration": "strong" } },
+          { "type": "pulse", "data": { "time": 0, "value": 120 } },
+          { "type": "bp", "data": { "time": 0, "value": { "systolic": 100, "diastolic": 60 } } },
+          { "type": "liquor", "data": { "time": 0, "value": "B" } }
+        ]
+      },
+      {
+        "time": 0.01,
+        "info": "The CTG shows minimal variability and persistent late decelerations. The clinical picture is highly suggestive of a major obstetric emergency.",
+        "task": {
+          "type": "mcq",
+          "question": "What is the most likely diagnosis?",
+          "options": [
+            { "id": "A", "text": "Uterine Rupture" },
+            { "id": "B", "text": "Placental Abruption" },
+            { "id": "C", "text": "Chorioamnionitis with Sepsis" },
+            { "id": "D", "text": "Placenta Previa" }
+          ],
+          "correctAnswer": "B",
+          "feedback": "<strong>Correct.</strong> The combination of risk factors, a painful and rigid 'woody' uterus, maternal shock, and fetal distress is classic for a severe placental abruption. The bleeding in previa is painless, and rupture would typically present with loss of contractions."
+        }
+      },
+      {
+        "time": 0.1,
+        "info": "You have correctly diagnosed a severe placental abruption. The lab calls with critical results:<br><strong>Platelets: 80</strong> (low)<br><strong>Fibrinogen: 1.5 g/L</strong> (critically low for pregnancy)<br><strong>PT/APTT: Prolonged</strong>",
+        "task": {
+          "type": "final_mcq",
+          "question": "Given these lab results on top of the clinical picture, what is the immediate and comprehensive management plan?",
+          "options": [
+            { "id": "A", "text": "Await further clotting factors and then proceed with delivery." },
+            { "id": "B", "text": "Start oxytocin to expedite vaginal delivery." },
+            { "id": "C", "text": "Simultaneously resuscitate the mother with blood products (to correct DIC) and proceed to immediate emergency C-section." },
+            { "id": "D", "text": "Administer steroids for fetal lung maturity and wait 24 hours." }
+          ],
+          "correctAnswer": "C",
+          "feedback": "<strong>Correct.</strong> This is a rapidly evolving maternal and fetal crisis. The lab results confirm Disseminated Intravascular Coagulation (DIC). Management must be aggressive and simultaneous: resuscitate the mother with blood and clotting factors while proceeding to immediate C-section to deliver the baby and remove the placental source of the problem."
+        }
+      }
+    ]
+  }
+]
+
+
+// --- DOM ELEMENTS & STATE --- //
+    const app = {
+        modeSelector: document.getElementById('mode-selector'),
+        mainContent: document.getElementById('main-content'),
+        scenarioSelector: document.getElementById('scenario-selector'),
+        partogram: { svg: document.getElementById('partogram-svg'), },
+        scenario: {
+            caseTitle: document.getElementById('case-title'),
+            caseIntro: document.getElementById('case-intro'),
+            stepInfo: document.getElementById('step-info'),
+            actionTitle: document.getElementById('action-title'),
+            plotTools: document.getElementById('plot-tools'),
+            testModeTools: document.getElementById('test-mode-tools'),
+            toolOptionsPanel: document.getElementById('tool-options-panel'),
+            taskInstructions: document.getElementById('task-instructions'),
+            mcqOptions: document.getElementById('mcq-options'),
+            feedbackPanel: document.getElementById('feedback-panel')
+        },
+        navigation: {
+            verifyButton: document.getElementById('verify-button'),
+            nextStepButton: document.getElementById('next-step-button'),
+            restartButton: document.getElementById('restart-button')
+        },
+        results: {
+            screen: document.getElementById('results-screen'),
+            title: document.getElementById('results-title'),
+            summary: document.getElementById('results-summary')
+        }
+    };
+
+    let state = {
+        mode: null, // 'tutor' or 'test'
+        currentScenario: null,
+        currentStepIndex: -1,
+        plottedData: { dilation: [], descent: [], fhr: [], pulse:[] },
+        currentPlotActionIndex: 0,
+        selectedSymbol: null,
+        testModeUserPlots: [],
+        pendingPlot: null,
+        plotSubState: null
+    };
+
+    // --- SVG & PARTOGRAM CONSTANTS --- //
+    const SVG_W = 1200, SVG_H = 1250;
+    const MARGIN = { top: 40, right: 80, bottom: 40, left: 100 };
+    const G = {
+        w: SVG_W - MARGIN.left - MARGIN.right,
+        h: SVG_H - MARGIN.top - MARGIN.bottom,
+        time_cols: 24, // 24 columns for 12 hours (30 min intervals)
+    };
+    G.col_w = G.w / G.time_cols;
+
+    // Y-Coordinates for each section
+    const Y_POS = {
+        fhr_start: MARGIN.top,
+        fhr_h: 180,
+        liquor_h: 40,
+        moulding_h: 40,
+        labor_graph_h: 300,
+        contractions_h: 150,
+        oxytocin_h: 60,
+        drugs_h: 80,
+        maternal_h: 180,
+        temp_h: 40,
+        urine_h: 80
+    };
+    Y_POS.liquor_start = Y_POS.fhr_start + Y_POS.fhr_h;
+    Y_POS.moulding_start = Y_POS.liquor_start + Y_POS.liquor_h;
+    Y_POS.labor_graph_start = Y_POS.moulding_start + Y_POS.moulding_h;
+    Y_POS.contractions_start = Y_POS.labor_graph_start + Y_POS.labor_graph_h;
+    Y_POS.oxytocin_start = Y_POS.contractions_start + Y_POS.contractions_h;
+    Y_POS.drugs_start = Y_POS.oxytocin_start + Y_POS.oxytocin_h;
+    Y_POS.maternal_start = Y_POS.drugs_start + Y_POS.drugs_h;
+    Y_POS.temp_start = Y_POS.maternal_start + Y_POS.maternal_h;
+    Y_POS.urine_start = Y_POS.temp_start + Y_POS.temp_h;
+
+    // --- SCALE FUNCTIONS --- //
+    const scale = {
+        x: (h) => MARGIN.left + (h * 2) * G.col_w,
+        fhr: {
+            y: (bpm) => Y_POS.fhr_start + Y_POS.fhr_h - ((bpm - 80) / 120 * Y_POS.fhr_h),
+            val: (y) => ((Y_POS.fhr_start + Y_POS.fhr_h - y) / Y_POS.fhr_h) * 120 + 80
+        },
+        dilation: {
+            y: (cm) => Y_POS.labor_graph_start + Y_POS.labor_graph_h - (cm / 10 * Y_POS.labor_graph_h),
+            val: (y) => ((Y_POS.labor_graph_start + Y_POS.labor_graph_h - y) / Y_POS.labor_graph_h) * 10
+        },
+        descent: {
+            // Corrected: Descent (value 0-5 for fifths palpable) is plotted directly on the dilation scale (0-10)
+            y: (fifths_palpable) => scale.dilation.y(fifths_palpable),
+            val: (y) => scale.dilation.val(y)
+        },
+        contractions: {
+            val: (y) => {
+                const val = Math.ceil(((Y_POS.contractions_start + Y_POS.contractions_h - y) / Y_POS.contractions_h) * 5);
+                return Math.max(1, Math.min(5, val)); // Clamp between 1 and 5
+            }
+        },
+        vitals: {
+            // Corrected: A single unified scale for Pulse and BP. Range 50-190.
+            y: (v) => Y_POS.maternal_start + Y_POS.maternal_h - (((v - 50) / 140) * Y_POS.maternal_h),
+            val: (y) => (((Y_POS.maternal_start + Y_POS.maternal_h - y) / Y_POS.maternal_h) * 140) + 50
+        },
+        temp: {
+            val: (y) => (((Y_POS.temp_start + Y_POS.temp_h - y) / Y_POS.temp_h) * 5) + 35
+        },
+        time: {
+            val: (x) => (x - MARGIN.left) / (G.col_w * 2)
+        }
+    };
+    
+    // --- SVG DRAWING FUNCTIONS --- //
+    let COLORS = {};
+    function createSvgElement(tag, attributes) {
+        const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+        for (const key in attributes) { el.setAttribute(key, attributes[key]); }
+        return el;
+    }
+
+    function drawText(txt, x, y, options = {}) {
+        const defaults = { 'font-size': '14px', fill: COLORS.lightText, 'text-anchor': 'middle', 'dominant-baseline': 'central' };
+        const attrs = { ...defaults, ...options };
+        const textEl = createSvgElement('text', { x, y, ...attrs });
+        textEl.textContent = txt;
+        return textEl;
+    }
+
+    function drawGrid() {
+        const svg = app.partogram.svg;
+        svg.innerHTML = '';
+
+        // Add definitions for fill patterns
+        const defs = createSvgElement('defs');
+        const weakPattern = createSvgElement('pattern', {id: 'pattern-weak', patternUnits: 'userSpaceOnUse', width: 8, height: 8});
+        weakPattern.appendChild(createSvgElement('rect', {width: 8, height: 8, fill: '#f8fafc'}));
+        weakPattern.appendChild(createSvgElement('circle', {cx: 2, cy: 2, r: 1.5, fill: '#0f766e'}));
+        defs.appendChild(weakPattern);
+        const moderatePattern = createSvgElement('pattern', {id: 'pattern-moderate', patternUnits: 'userSpaceOnUse', width: 10, height: 10});
+        moderatePattern.appendChild(createSvgElement('rect', {width: 10, height: 10, fill: '#f8fafc'}));
+        moderatePattern.appendChild(createSvgElement('line', {x1: 0, y1: 10, x2: 10, y2: 0, stroke: '#0f766e', 'stroke-width': 2, 'stroke-dasharray': '4 2'}));
+        defs.appendChild(moderatePattern);
+        svg.appendChild(defs);
+
+
+        const drawYAxisLabel = (txt, y_start, y_height, angle = -55) => {
+             svg.appendChild(drawText(txt, 40, y_start + y_height / 2, { 'font-size': '16px', 'font-weight': 'bold', transform: `rotate(${angle}, 40, ${y_start + y_height / 2})` }));
+        };
+
+        // TIME AXES
+        for (let i = 0; i <= G.time_cols; i++) {
+            const x = MARGIN.left + i * G.col_w;
+            svg.appendChild(createSvgElement('line', {
+                x1: x, y1: MARGIN.top, x2: x, y2: Y_POS.urine_start + Y_POS.urine_h,
+                stroke: COLORS.borderColor, 'stroke-width': i % 2 === 0 ? 1 : 0.5, 'stroke-dasharray': i % 2 !== 0 ? '4 2' : 'none'
+            }));
+            if (i % 2 === 0) {
+                const hour = i / 2;
+                svg.appendChild(drawText(hour, x, MARGIN.top - 20));
+                svg.appendChild(drawText(hour, x, Y_POS.urine_start + Y_POS.urine_h + 20));
+            }
+        }
+        svg.appendChild(drawText('Time (hours)', G.w/2 + MARGIN.left, MARGIN.top - 32, { 'font-weight': 'bold', 'font-size': '16px' }));
+
+        // --- SECTIONS ---
+        const sections = [
+            { y: Y_POS.fhr_start, h: Y_POS.fhr_h, label: 'Fetal HR' },
+            { y: Y_POS.liquor_start, h: Y_POS.liquor_h, label: 'Liquor' },
+            { y: Y_POS.moulding_start, h: Y_POS.moulding_h, label: 'Moulding' },
+            { y: Y_POS.labor_graph_start, h: Y_POS.labor_graph_h, label: 'Dilation & Descent'},
+            { y: Y_POS.contractions_start, h: Y_POS.contractions_h, label: 'Contractions /10m' },
+            { y: Y_POS.oxytocin_start, h: Y_POS.oxytocin_h, label: 'Oxytocin', sub:['U/L', 'Rate'] },
+            { y: Y_POS.drugs_start, h: Y_POS.drugs_h, label: 'Drugs/IVF' },
+            { y: Y_POS.maternal_start, h: Y_POS.maternal_h, label: 'Pulse & BP' },
+            { y: Y_POS.temp_start, h: Y_POS.temp_h, label: 'Temp °C' },
+            { y: Y_POS.urine_start, h: Y_POS.urine_h, label: 'Urine', sub:['Protein', 'Acetone', 'Volume'] },
+        ];
+
+        sections.forEach(sec => {
+            svg.appendChild(createSvgElement('rect', { x: MARGIN.left, y: sec.y, width: G.w, height: sec.h, fill: 'none', stroke: COLORS.mainText }));
+            drawYAxisLabel(sec.label, sec.y, sec.h, sec.label.length > 10 ? -90 : -55);
+             if (sec.sub) {
+                const sub_h = sec.h / sec.sub.length;
+                sec.sub.forEach((sub, i) => {
+                    svg.appendChild(drawText(sub, MARGIN.left + 40, sec.y + i * sub_h + sub_h/2, { 'text-anchor': 'start', 'font-size':'12px' }));
+                    if (i < sec.sub.length - 1) {
+                         svg.appendChild(createSvgElement('line', { x1: MARGIN.left, y1: sec.y + (i+1)*sub_h, x2: MARGIN.left+G.w, y2: sec.y + (i+1)*sub_h, stroke: COLORS.borderColor, 'stroke-dasharray': '2,2' }));
+                    }
+                })
+            }
+        });
+        
+        // --- SCALES ---
+        // FHR Scale
+        for(let bpm = 80; bpm <= 200; bpm += 10) {
+            const y = scale.fhr.y(bpm);
+            svg.appendChild(drawText(bpm, MARGIN.left-15, y, {'text-anchor': 'end'}));
+        }
+        
+        // Corrected: Dilation & Descent Scale
+        // Left scale (Dilation cm)
+        svg.appendChild(drawText("cm", MARGIN.left - 15, Y_POS.labor_graph_start - 10, {'text-anchor': 'end', 'font-weight':'bold', 'font-size':'12px', fill: COLORS.mainText}));
+        for (let i = 0; i <= 10; i++) {
+             const y = scale.dilation.y(i);
+             svg.appendChild(drawText(i, MARGIN.left-25, y, {'text-anchor': 'end'}));
+             svg.appendChild(createSvgElement('line', { x1: MARGIN.left, y1: y, x2: G.w + MARGIN.left, y2: y, stroke: COLORS.borderColor, 'stroke-width':0.5 }));
+        }
+        // Right scale (Fifths Palpable) this is unnecessary as Descent is plotted on the same scale as Dilation
+        // svg.appendChild(drawText("Fifths Palpable", MARGIN.left + G.w + 40, Y_POS.labor_graph_start - 10, {'text-anchor': 'middle', 'font-weight':'bold', 'font-size':'12px', fill: COLORS.accentDark}));
+        // for (let i = 0; i <= 5; i++) { // i represents a position on the 0-10 dilation grid
+        //      const y = scale.dilation.y(i);
+        //      // The label is simply i, as the scale is 0-5
+        //      svg.appendChild(drawText(i, MARGIN.left + G.w + 15, y));
+        // }
+
+        // Contractions Scale
+        for (let i=1; i<=5; i++){
+            const y_line = Y_POS.contractions_start + Y_POS.contractions_h - (i/5 * Y_POS.contractions_h);
+            const y_text = y_line + (Y_POS.contractions_h/10);
+            svg.appendChild(drawText(i, MARGIN.left-15, y_text, {'text-anchor': 'end'}));
+            svg.appendChild(createSvgElement('line', {x1: MARGIN.left, y1: y_line, x2: MARGIN.left+G.w, y2: y_line, stroke: COLORS.borderColor, 'stroke-width':0.5, 'stroke-dasharray':'2,2'}));
+        }
+        
+        // Corrected: Unified Maternal Vitals Scale
+        for (let v = 50; v <= 190; v += 10) {
+            const y = scale.vitals.y(v);
+            svg.appendChild(drawText(v, MARGIN.left - 15, y, {'text-anchor': 'end'}));
+            svg.appendChild(createSvgElement('line', { x1: MARGIN.left, y1: y, x2: G.w + MARGIN.left, y2: y, stroke: COLORS.borderColor, 'stroke-width':0.5, 'stroke-dasharray':'2,2' }));
+        }
+
+        // Alert & Action Lines
+        svg.appendChild(createSvgElement('line', { x1: scale.x(0), y1: scale.dilation.y(4), x2: scale.x(6), y2: scale.dilation.y(10), stroke: COLORS.warningColor, 'stroke-width': 3, 'stroke-dasharray': '8,4' }));
+        svg.appendChild(drawText('Alert', scale.x(0.5), scale.dilation.y(4.5), {fill: COLORS.warningColor, 'font-weight':'bold'}));
+        svg.appendChild(createSvgElement('line', { x1: scale.x(4), y1: scale.dilation.y(4), x2: scale.x(10), y2: scale.dilation.y(10), stroke: COLORS.dangerColor, 'stroke-width': 3 }));
+        svg.appendChild(drawText('Action', scale.x(4.5), scale.dilation.y(4.5), {fill: COLORS.dangerColor, 'font-weight':'bold'}));
+        
+        const cursorGroup = createSvgElement('g', {id: 'cursor-guides', style: 'pointer-events: none; visibility: hidden;'});
+        cursorGroup.appendChild(createSvgElement('line', {id: 'cursor-x', x1: MARGIN.left, x2: MARGIN.left + G.w, y1:0, y2:0, stroke: 'rgba(0,0,0,0.4)', 'stroke-width': 1, 'stroke-dasharray': '3 3'}));
+        cursorGroup.appendChild(createSvgElement('line', {id: 'cursor-y', y1: MARGIN.top, y2: Y_POS.urine_start + Y_POS.urine_h, x1:0, x2:0, stroke: 'rgba(0,0,0,0.4)', 'stroke-width': 1, 'stroke-dasharray': '3 3'}));
+        svg.appendChild(cursorGroup);
+    }
+    
+    function plotDataPoint(action, dataSource = 'tutor') {
+        const {type, data} = action;
+        const x = scale.x(data.time);
+        let el;
+        const elGroup = createSvgElement('g', {'data-plot-type': type, 'data-time': data.time, 'data-source': dataSource});
+
+
+        const connectPoints = (historyArray, yFunc, color = COLORS.mainText, strokeWidth = 2) => {
+            if (historyArray.length > 0) {
+                const prev = historyArray[historyArray.length-1];
+                elGroup.appendChild(createSvgElement('line', {
+                    x1: scale.x(prev.time), y1: yFunc(prev.value),
+                    x2: x, y2: yFunc(data.value),
+                    stroke: color, 'stroke-width': strokeWidth
+                }));
+            }
+        };
+
+        switch (type) {
+            case 'dilation':
+                connectPoints(state.plottedData.dilation, scale.dilation.y);
+                el = drawText('X', x, scale.dilation.y(data.value), { 'font-size': '24px', 'font-family': 'monospace', fill: COLORS.mainText, 'font-weight':'bold' });
+                state.plottedData.dilation.push(data);
+                break;
+            case 'descent':
+                connectPoints(state.plottedData.descent, scale.descent.y, COLORS.accentColor);
+                el = createSvgElement('circle', { cx: x, cy: scale.descent.y(data.value), r: 8, fill: 'none', stroke: COLORS.accentColor, 'stroke-width': 3 });
+                state.plottedData.descent.push(data);
+                break;
+            case 'fhr':
+                connectPoints(state.plottedData.fhr, scale.fhr.y);
+                el = createSvgElement('circle', { cx: x, cy: scale.fhr.y(data.value), r: 4, fill: COLORS.mainText });
+                state.plottedData.fhr.push(data);
+                break;
+            case 'liquor': case 'moulding':
+                 const y_zone_lm = {
+                     'liquor': { start: Y_POS.liquor_start, h: Y_POS.liquor_h },
+                     'moulding': { start: Y_POS.moulding_start, h: Y_POS.moulding_h },
+                 }[type];
+                 el = drawText(String(data.value), x + (G.col_w / 2), y_zone_lm.start + y_zone_lm.h / 2, { 'font-weight': 'bold', 'font-size': '16px' });
+                 break;
+            case 'contractions':
+                 const y_base = Y_POS.contractions_start + Y_POS.contractions_h;
+                 const y_h = (data.value / 5) * Y_POS.contractions_h;
+                 let fill;
+                 switch(data.duration) {
+                    case 'weak': fill = 'url(#pattern-weak)'; break;
+                    case 'moderate': fill = 'url(#pattern-moderate)'; break;
+                    case 'strong': fill = '#10b981'; break;
+                    default: fill = '#10b981';
+                 }
+                 el = createSvgElement('rect', { x: x, y: y_base - y_h, width: G.col_w, height: y_h, fill, stroke: '#0f766e', 'stroke-width': 0.5 });
+                 break;
+            case 'oxytocin':
+                 const oxy_sub_h = Y_POS.oxytocin_h / 2;
+                 elGroup.appendChild(drawText(String(data.value.ul), x + G.col_w, Y_POS.oxytocin_start + oxy_sub_h / 2, { 'font-size': '12px', 'text-anchor': 'end' }));
+                 elGroup.appendChild(drawText(String(data.value.rate), x + G.col_w, Y_POS.oxytocin_start + oxy_sub_h + oxy_sub_h / 2, { 'font-size': '12px', 'text-anchor': 'end' }));
+                 break;
+            case 'drugs':
+                 el = drawText(String(data.value), x + G.col_w / 2, Y_POS.drugs_start + Y_POS.drugs_h / 2, { 'font-size': '12px', 'text-anchor': 'middle' });
+                 break;
+             case 'urine_protein':
+                 el = drawText(String(data.value), x + G.col_w, Y_POS.urine_start + (Y_POS.urine_h / 6), { 'font-size': '12px', 'text-anchor': 'end' });
+                 break;
+             case 'urine_acetone':
+                 el = drawText(String(data.value), x + G.col_w, Y_POS.urine_start + (Y_POS.urine_h / 2), { 'font-size': '12px', 'text-anchor': 'end' });
+                 break;
+             case 'urine_volume':
+                 el = drawText(String(data.value), x + G.col_w, Y_POS.urine_start + (Y_POS.urine_h * 5 / 6), { 'font-size': '12px', 'text-anchor': 'end' });
+                 break;
+            case 'pulse':
+                 connectPoints(state.plottedData.pulse, scale.vitals.y);
+                 el = createSvgElement('circle', { cx: x, cy: scale.vitals.y(data.value), r: 4, fill: COLORS.mainText });
+                 state.plottedData.pulse.push(data);
+                 break;
+            case 'bp':
+                 const y1 = scale.vitals.y(data.value.systolic);
+                 const y2 = scale.vitals.y(data.value.diastolic);
+                 el = createSvgElement('line', { x1: x, y1: y1, x2: x, y2: y2, stroke: COLORS.accentDark, 'stroke-width': 3 });
+                 elGroup.appendChild(createSvgElement('line', { x1: x-5, y1: y1, x2: x+5, y2: y1, stroke: COLORS.accentDark, 'stroke-width': 3 }));
+                 elGroup.appendChild(createSvgElement('line', { x1: x-5, y1: y2, x2: x+5, y2: y2, stroke: COLORS.accentDark, 'stroke-width': 3 }));
+                 break;
+            case 'temp':
+                 el = createSvgElement('circle', { cx: x + G.col_w / 2, cy: Y_POS.temp_start + Y_POS.temp_h/2, r: 4, fill: COLORS.dangerColor});
+                 elGroup.appendChild(drawText(data.value.toFixed(1), x + G.col_w, Y_POS.temp_start + Y_POS.temp_h/2, { 'font-size': '12px', 'text-anchor': 'end' }));
+                 break;
+        }
+        if (el) elGroup.appendChild(el);
+        app.partogram.svg.appendChild(elGroup);
+    }
+    
+    function updateCursorGuides(event) {
+        const guides = document.getElementById('cursor-guides');
+        if (!guides) return;
+        
+        if (app.partogram.svg.classList.contains('interactive')) {
+            const svg = app.partogram.svg;
+            const pt = svg.createSVGPoint();
+            pt.x = event.clientX;
+            pt.y = event.clientY;
+            const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+            
+            guides.style.visibility = 'visible';
+            
+            const cursorX = document.getElementById('cursor-x');
+            const cursorY = document.getElementById('cursor-y');
+            
+            cursorX.setAttribute('y1', svgP.y);
+            cursorX.setAttribute('y2', svgP.y);
+            cursorY.setAttribute('x1', svgP.x);
+            cursorY.setAttribute('x2', svgP.x);
+        } else {
+            guides.style.visibility = 'hidden';
+        }
+    }
+
+    function handlePartogramClick(event) {
+        const svg = app.partogram.svg;
+        const pt = svg.createSVGPoint();
+        pt.x = event.clientX;
+        pt.y = event.clientY;
+        const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+        const clickedTime = scale.time.val(svgP.x);
+        
+        if (state.mode === 'tutor' && svg.classList.contains('interactive')) {
+            handleTutorPlot(svgP, clickedTime);
+        } else if (state.mode === 'test' && state.pendingPlot && svg.classList.contains('interactive')) {
+            handleTestPlotClick(svgP, clickedTime);
+        }
+    }
+
+    function handleTutorPlot(svgP, clickedTime) {
+        const action = state.currentScenario.steps[state.currentStepIndex].task.actions[state.currentPlotActionIndex];
+        if (!action) return;
+        
+        if (action.symbol && action.symbol !== state.selectedSymbol) {
+            setInstructions(`Incorrect tool selected. Please select the <strong>${action.symbol}</strong> tool to continue.`, 'error');
+            return;
+        }
+
+        if (Math.abs(clickedTime - action.data.time) > 0.45) {
+            setInstructions(`You are plotting in the wrong time column. Please try to plot at <strong>Hour ${action.data.time}</strong>.`, 'error');
+            return;
+        }
+
+        let valueIsCorrect = false;
+        let clickedValue;
+        switch(action.type) {
+            case 'dilation': clickedValue = scale.dilation.val(svgP.y); valueIsCorrect = Math.abs(clickedValue - action.data.value) < 0.5; break;
+            case 'descent': clickedValue = scale.descent.val(svgP.y); valueIsCorrect = Math.abs(clickedValue - action.data.value) < 0.5; break;
+            case 'fhr': clickedValue = scale.fhr.val(svgP.y); valueIsCorrect = Math.abs(clickedValue - action.data.value) < 8; break;
+            case 'contractions': clickedValue = scale.contractions.val(svgP.y); valueIsCorrect = clickedValue === action.data.value; break;
+            case 'pulse': clickedValue = scale.vitals.val(svgP.y); valueIsCorrect = Math.abs(clickedValue - action.data.value) < 8; break;
+            case 'bp': valueIsCorrect = svgP.y > Y_POS.maternal_start && svgP.y < Y_POS.maternal_start + Y_POS.maternal_h; break;
+            case 'liquor': valueIsCorrect = svgP.y > Y_POS.liquor_start && svgP.y < Y_POS.liquor_start + Y_POS.liquor_h; break;
+            case 'moulding': valueIsCorrect = svgP.y > Y_POS.moulding_start && svgP.y < Y_POS.moulding_start + Y_POS.moulding_h; break;
+            case 'temp': valueIsCorrect = svgP.y > Y_POS.temp_start && svgP.y < Y_POS.temp_start + Y_POS.temp_h; break;
+            // Text-based entries are handled by handlePlotAction, not here.
+            default: valueIsCorrect = false;
+        }
+        
+        if (valueIsCorrect) {
+            setInstructions(`Correct! Plotting ${action.label || action.type}...`, 'success');
+            plotDataPoint(action, 'tutor');
+            state.currentPlotActionIndex++;
+            setTimeout(handlePlotAction, 800);
+        } else {
+            setInstructions(`That's not the correct value or position. Please review the clinical data and try again.`, 'error');
+        }
+    }
+    
+    function initialize() {
+        const computedStyle = getComputedStyle(document.documentElement);
+        ['mainText', 'lightText', 'accentColor', 'accentDark', 'borderColor', 'dangerColor', 'warningColor', 'successColor'].forEach(c => {
+            COLORS[c] = computedStyle.getPropertyValue(`--${c.replace(/([A-Z])/g, "-$1").toLowerCase()}`).trim();
+        });
+
+        app.modeSelector.style.display = 'block';
+        app.scenarioSelector.style.display = 'none';
+        app.mainContent.style.display = 'none';
+        app.results.screen.style.display = 'none';
+        
+        app.modeSelector.querySelectorAll('.mode-button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                state.mode = e.currentTarget.dataset.mode;
+                app.modeSelector.style.display = 'none';
+                app.scenarioSelector.style.display = 'block';
+            });
+        });
+        
+        populateScenarioSelector();
+        app.navigation.nextStepButton.addEventListener('click', loadNextStep);
+        app.navigation.restartButton.addEventListener('click', initialize);
+        app.partogram.svg.addEventListener('click', handlePartogramClick);
+        app.partogram.svg.addEventListener('mousemove', updateCursorGuides);
+        app.partogram.svg.addEventListener('mouseleave', () => { 
+            const guides = document.getElementById('cursor-guides');
+            if (guides) guides.style.visibility = 'hidden'; 
+        });
+        app.scenario.plotTools.addEventListener('click', (e) => {
+            if(e.target.classList.contains('tool-button')) {
+                const symbol = e.target.dataset.symbol;
+                state.selectedSymbol = symbol;
+                app.scenario.plotTools.querySelectorAll('.tool-button').forEach(btn => btn.classList.remove('selected'));
+                e.target.classList.add('selected');
+            }
+        });
+        app.navigation.verifyButton.addEventListener('click', verifyTestPlots);
+    }
+
+    function populateScenarioSelector() {
+        const selector = app.scenarioSelector;
+        selector.innerHTML = '<h2>Select a Clinical Scenario</h2>';
+        scenarios.forEach((scenario, index) => {
+            const button = document.createElement('button');
+            button.className = 'scenario-button';
+            button.textContent = scenario.title;
+            button.onclick = () => startScenario(index);
+            selector.appendChild(button);
+        });
+    }
+
+    function startScenario(scenarioIndex) {
+        state.currentScenario = scenarios[scenarioIndex];
+        state.currentStepIndex = -1;
+        state.plottedData = { dilation: [], descent: [], fhr: [], pulse: [] };
+        
+        app.scenarioSelector.style.display = 'none';
+        app.mainContent.style.display = 'flex';
+        app.results.screen.style.display = 'none';
+
+        drawGrid();
+        
+        app.scenario.caseTitle.textContent = state.currentScenario.title;
+        app.scenario.caseIntro.innerHTML = `<p>${state.currentScenario.introduction}</p>`;
+        
+        loadNextStep();
+    }
+    
+    function setInstructions(text, type = 'prompt') {
+        const el = app.scenario.taskInstructions;
+        el.innerHTML = text;
+        el.className = type;
+    }
+
+    function loadNextStep() {
+        state.currentStepIndex++;
+        const step = state.currentScenario.steps[state.currentStepIndex];
+
+        if (!step) {
+            showResults();
+            return;
+        }
+
+        // Auto-plot any data provided for this step
+        if (step.prePlotActions && Array.isArray(step.prePlotActions)) {
+            step.prePlotActions.forEach(action => plotDataPoint(action, 'tutor'));
+        }
+
+        app.partogram.svg.classList.remove('interactive', 'test-mode-active');
+        app.scenario.plotTools.style.display = 'none';
+        app.scenario.testModeTools.style.display = 'none';
+        app.scenario.toolOptionsPanel.style.display = 'none';
+        app.navigation.verifyButton.style.display = 'none';
+        app.scenario.stepInfo.innerHTML = `<p>${step.info}</p>`;
+        app.navigation.nextStepButton.disabled = true;
+        app.scenario.feedbackPanel.style.display = 'none';
+        app.scenario.mcqOptions.innerHTML = '';
+        setInstructions('');
+
+        if (state.mode === 'tutor') {
+            handleTutorStep(step);
+        } else {
+            handleTestStep(step);
+        }
+    }
+
+    function handleTutorStep(step) {
+        if (step.task.type === 'interactivePlot') {
+            app.scenario.actionTitle.textContent = 'Your Task: Plot Findings';
+            state.currentPlotActionIndex = 0;
+            handlePlotAction();
+        } else if (step.task.type === 'final_mcq' && step.task.actions) { // Hybrid text entry + MCQ
+            app.scenario.actionTitle.textContent = 'Your Task: Chart and Decide';
+            state.currentPlotActionIndex = 0;
+            handlePlotAction();
+        } else if (step.task.type === 'mcq' || step.task.type === 'final_mcq') {
+            showMCQ(step.task);
+        }
+    }
+
+    function setupTool(action) {
+        // Deselect other tools and clear options
+        app.scenario.testModeTools.querySelectorAll('.tool-button').forEach(btn => btn.classList.remove('selected'));
+        const toolButton = app.scenario.testModeTools.querySelector(`[data-tool-type="${action.type}"]`);
+        if (toolButton) toolButton.classList.add('selected');
+
+        const optionsPanel = app.scenario.toolOptionsPanel;
+        optionsPanel.innerHTML = '';
+        optionsPanel.style.display = 'none';
+
+        // Set up the pending plot state
+        state.pendingPlot = { ...action };
+        state.plotSubState = null;
+        app.partogram.svg.classList.remove('interactive');
+
+        const requireClick = (instruction) => {
+            setInstructions(instruction || `Click on the partogram at <strong>Hour ${action.data.time}</strong> to plot <strong>${action.label}</strong>.`, 'prompt');
+            app.partogram.svg.classList.add('interactive');
+        };
+        
+        const createTextInput = (finalizeCb) => {
+            optionsPanel.style.display = 'flex';
+            let inputsHTML = '';
+            if (action.type === 'oxytocin') {
+                inputsHTML = `<label>U/L:</label><input type="text" id="refine-oxy-ul" class="refine-input"> <label>Rate:</label><input type="text" id="refine-oxy-rate" class="refine-input">`;
+            } else {
+                 inputsHTML = `<label>${action.label}:</label><input type="text" id="refine-text-input" class="refine-input" style="width: 120px;">`;
+            }
+            optionsPanel.innerHTML = `${inputsHTML} <button id="confirm-text" class="tool-button">Confirm</button>`;
+            document.getElementById('confirm-text').onclick = finalizeCb;
+        }
+
+        const createOptionButtons = (values, valueKey) => {
+            optionsPanel.style.display = 'flex';
+            values.forEach(val => {
+                const btn = document.createElement('button');
+                btn.className = 'tool-button';
+                btn.textContent = val;
+                btn.onclick = () => {
+                    state.pendingPlot[valueKey] = val;
+                    optionsPanel.querySelectorAll('.tool-button').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    requireClick(`Now click on the chart to plot.`);
+                };
+                optionsPanel.appendChild(btn);
+            });
+        };
+
+        switch (action.type) {
+            case 'dilation': case 'descent': requireClick(); break;
+            case 'fhr': requireClick(`Click on the chart to set an initial <strong>FHR</strong> value. You can refine it after.`); break;
+            case 'liquor': createOptionButtons(['I', 'C', 'M', 'B'], 'value'); break;
+            case 'moulding': createOptionButtons(['0', '1', '2', '3'], 'value'); break;
+            case 'contractions': setInstructions(`First, select the contraction strength.`, 'prompt'); createOptionButtons(['weak', 'moderate', 'strong'], 'duration'); break;
+            case 'pulse': requireClick(`Click on the chart to set an initial <strong>Pulse</strong> value. You can refine it after.`); break;
+            case 'bp': state.plotSubState = 'awaiting_systolic'; requireClick(`Plotting BP: Click to set <strong>Systolic</strong> pressure at Hour ${action.data.time}.`); break;
+            case 'temp': requireClick(`Click in the temp row at Hour ${action.data.time} to plot temperature.`); break;
+            case 'oxytocin':
+            case 'drugs':
+            case 'urine_protein':
+            case 'urine_acetone':
+            case 'urine_volume':
+                setInstructions(`Enter the value for ${action.label} and confirm.`, 'prompt');
+                createTextInput(() => {
+                    let userAction = { ...action };
+                    if (action.type === 'oxytocin') {
+                        userAction.data.value = {
+                            ul: document.getElementById('refine-oxy-ul').value,
+                            rate: document.getElementById('refine-oxy-rate').value
+                        };
+                    } else {
+                        userAction.data.value = document.getElementById('refine-text-input').value;
+                    }
+                    finalizePlot(userAction);
+                });
+                break;
+        }
+    }
+
+    function handleTestPlotClick(svgP, clickedTime) {
+        if (!state.pendingPlot) return;
+        const action = state.pendingPlot;
+        const stepTime = action.data.time;
+        
+        const finalizePlot = (finalAction) => {
+            plotDataPoint(finalAction, 'test');
+            state.testModeUserPlots.push(finalAction);
+            
+            const toolButton = app.scenario.testModeTools.querySelector(`[data-tool-type="${finalAction.type}"]`);
+            if (toolButton) {
+                toolButton.disabled = true;
+                toolButton.classList.remove('selected');
+            }
+            
+            app.partogram.svg.classList.remove('interactive');
+            app.scenario.toolOptionsPanel.innerHTML = '';
+            app.scenario.toolOptionsPanel.style.display = 'none';
+            app.navigation.verifyButton.disabled = false;
+            state.pendingPlot = null;
+            state.plotSubState = null;
+            setInstructions('Plotting successful. Select another tool or click "Submit & Verify".', 'success');
+        };
+
+        if (Math.abs(clickedTime - stepTime) > 0.45) {
+            setInstructions(`Incorrect time column. Please click at <strong>Hour ${stepTime}</strong>.`, 'error');
+            return;
+        }
+
+
+        let userAction = JSON.parse(JSON.stringify(action));
+
+        switch(userAction.type) {
+            case 'dilation':
+                userAction.data.value = Math.round(scale.dilation.val(svgP.y));
+                finalizePlot(userAction);
+                break;
+            case 'descent':
+                userAction.data.value = Math.round(scale.descent.val(svgP.y));
+                finalizePlot(userAction);
+                break;
+            case 'fhr': {
+                const val = Math.round(scale.fhr.val(svgP.y) / 5) * 5; // Snap to nearest 5
+                const optionsPanel = app.scenario.toolOptionsPanel;
+                optionsPanel.style.display = 'flex';
+                setInstructions('Refine the FHR value if needed and confirm.', 'prompt');
+                app.partogram.svg.classList.remove('interactive');
+                optionsPanel.innerHTML = `
+                    <label for="refine-fhr" style="margin-right: 5px;">FHR:</label>
+                    <input type="number" id="refine-fhr" value="${val}" class="refine-input">
+                    <button id="confirm-fhr" class="tool-button">Confirm</button>`;
+                document.getElementById('confirm-fhr').onclick = () => {
+                    userAction.data.value = parseInt(document.getElementById('refine-fhr').value, 10);
+                    finalizePlot(userAction);
+                };
+                break;
+            }
+            case 'liquor':
+            case 'moulding':
+                if (!userAction.value) {
+                    setInstructions('Please select a value from the options first.', 'error'); return;
+                }
+                userAction.data.value = userAction.value;
+                finalizePlot(userAction);
+                break;
+            case 'contractions':
+                 if (!userAction.duration) {
+                    setInstructions('Please select contraction strength first.', 'error'); return;
+                }
+                userAction.data.value = scale.contractions.val(svgP.y);
+                userAction.data.duration = userAction.duration;
+                finalizePlot(userAction);
+                break;
+            case 'pulse': {
+                const val = Math.round(scale.vitals.val(svgP.y));
+                const optionsPanel = app.scenario.toolOptionsPanel;
+                optionsPanel.style.display = 'flex';
+                setInstructions('Refine the value if needed and confirm.', 'prompt');
+                app.partogram.svg.classList.remove('interactive');
+                optionsPanel.innerHTML = `
+                    <label for="refine-pulse" style="margin-right: 5px;">Pulse:</label>
+                    <input type="number" id="refine-pulse" value="${val}" class="refine-input">
+                    <button id="confirm-pulse" class="tool-button">Confirm</button>`;
+                document.getElementById('confirm-pulse').onclick = () => {
+                    userAction.data.value = parseInt(document.getElementById('refine-pulse').value, 10);
+                    finalizePlot(userAction);
+                };
+                break;
+            }
+            case 'bp': {
+                const optionsPanel = app.scenario.toolOptionsPanel;
+                const v = Math.round(scale.vitals.val(svgP.y));
+                if (state.plotSubState === 'awaiting_systolic') {
+                    state.pendingPlot.systolic = v;
+                    state.plotSubState = 'awaiting_diastolic';
+                    setInstructions(`Systolic set to ${v}. Now click to set <strong>Diastolic</strong> pressure.`, 'prompt');
+                } else if (state.plotSubState === 'awaiting_diastolic') {
+                    state.pendingPlot.diastolic = v;
+                    app.partogram.svg.classList.remove('interactive');
+                    setInstructions('Refine BP values and confirm.', 'prompt');
+                    optionsPanel.style.display = 'flex';
+                    // Ensure systolic is higher than diastolic
+                    const s = Math.max(state.pendingPlot.systolic, state.pendingPlot.diastolic);
+                    const d = Math.min(state.pendingPlot.systolic, state.pendingPlot.diastolic);
+                    optionsPanel.innerHTML = `
+                        <input type="number" id="refine-systolic" value="${s}" class="refine-input"> / 
+                        <input type="number" id="refine-diastolic" value="${d}" class="refine-input">
+                        <button id="confirm-bp" class="tool-button">Confirm</button>`;
+                    document.getElementById('confirm-bp').onclick = () => {
+                        userAction.data.value = {
+                            systolic: parseInt(document.getElementById('refine-systolic').value, 10),
+                            diastolic: parseInt(document.getElementById('refine-diastolic').value, 10)
+                        };
+                        finalizePlot(userAction);
+                    };
+                }
+                break;
+            }
+            case 'temp':
+                 userAction.data.value = parseFloat(scale.temp.val(svgP.y).toFixed(1));
+                 finalizePlot(userAction);
+                 break;
+        }
+    }
+
+    function handleTestStep(step) {
+        state.testModeUserPlots = [];
+        
+        if (step.task.type === 'interactivePlot' || (step.task.type === 'final_mcq' && step.task.actions)) {
+            app.scenario.actionTitle.textContent = 'Your Task: Plot All Findings';
+            setInstructions('Review the clinical update. Use the tools below to plot all relevant findings for the current time point.', 'prompt');
+            app.navigation.verifyButton.style.display = 'block';
+            app.navigation.verifyButton.disabled = true;
+            app.partogram.svg.classList.add('test-mode-active');
+            
+            const toolsContainer = app.scenario.testModeTools;
+            toolsContainer.innerHTML = '';
+            app.scenario.toolOptionsPanel.innerHTML = '';
+            app.scenario.toolOptionsPanel.style.display = 'none';
+            
+            const actions = step.task.actions;
+
+            actions.forEach(action => {
+                const toolBtn = document.createElement('button');
+                toolBtn.className = 'tool-button';
+                toolBtn.dataset.toolType = action.type;
+                toolBtn.innerHTML = action.label;
+                toolBtn.onclick = () => setupTool(action);
+                toolsContainer.appendChild(toolBtn);
+            });
+            toolsContainer.style.display = 'flex';
+
+        } else if (step.task.type === 'mcq' || step.task.type === 'final_mcq') {
+            showMCQ(step.task);
+        }
+    }
+    
+    function verifyTestPlots() {
+        const step = state.currentScenario.steps[state.currentStepIndex];
+        const correctActions = step.task.actions;
+        const userPlots = state.testModeUserPlots;
+        let feedbackHTML = '<ul>';
+        let allCorrect = true;
+
+        correctActions.forEach(action => {
+            const userPlot = userPlots.find(p => p.type === action.type);
+            let valueIsCorrect = false;
+            let userValueDisplay = 'N/A';
+
+            if (userPlot) {
+                 userValueDisplay = JSON.stringify(userPlot.data.value);
+                if (action.type === 'bp' || action.type === 'oxytocin') {
+                    valueIsCorrect = JSON.stringify(userPlot.data.value) === JSON.stringify(action.data.value);
+                } else if (typeof action.data.value === 'string') {
+                    valueIsCorrect = userPlot.data.value.trim().toUpperCase() === action.data.value.trim().toUpperCase();
+                } else if (typeof action.data.value === 'number') {
+                     // Allow for some tolerance in click-based values
+                    const tolerance = (action.type === 'fhr' || action.type === 'pulse') ? 5 : (action.type === 'temp' ? 0.5 : 1);
+                    valueIsCorrect = Math.abs(userPlot.data.value - action.data.value) <= tolerance;
+                }
+                
+                if (valueIsCorrect) {
+                    feedbackHTML += `<li class="fb-correct">✔ ${action.label}: Correctly plotted as ${JSON.stringify(action.data.value)}.</li>`;
+                } else {
+                    allCorrect = false;
+                    feedbackHTML += `<li class="fb-incorrect">✖ ${action.label}: Incorrect. You plotted ${userValueDisplay}, but the correct value was ${JSON.stringify(action.data.value)}.</li>`;
+                }
+            } else {
+                allCorrect = false;
+                feedbackHTML += `<li class="fb-missing">! ${action.label}: Missing. You did not plot this finding (Correct value: ${JSON.stringify(action.data.value)}).</li>`;
+            }
+        });
+        feedbackHTML += '</ul>';
+        
+        app.scenario.feedbackPanel.innerHTML = `<strong>Verification Results:</strong>${feedbackHTML}`;
+        app.scenario.feedbackPanel.style.display = 'block';
+
+        if (allCorrect) {
+            app.scenario.feedbackPanel.className = 'feedback correct';
+            setInstructions('All plots are correct! You can now proceed.', 'success');
+            app.navigation.nextStepButton.disabled = false;
+            app.navigation.verifyButton.style.display = 'none';
+            if (step.task.mcq) {
+                showMCQ(step.task.mcq);
+            }
+        } else {
+            app.scenario.feedbackPanel.className = 'feedback incorrect';
+            setInstructions('Some plots were incorrect or missing. Review the feedback and try this step again.', 'error');
+            app.navigation.nextStepButton.disabled = false;
+            app.navigation.verifyButton.style.display = 'none';
+        }
+    }
+
+
+    function handlePlotAction() {
+        const step = state.currentScenario.steps[state.currentStepIndex];
+        const plotActions = step.task.actions;
+        
+        if (state.currentPlotActionIndex >= plotActions.length) {
+            app.partogram.svg.classList.remove('interactive');
+            app.scenario.plotTools.style.display = 'none';
+            app.scenario.mcqOptions.innerHTML = '';
+            
+            if (step.task.mcq) {
+                showMCQ(step.task.mcq);
+            } else {
+                setInstructions('Plotting complete for this time point. Click "Next Step" to continue.', 'success');
+                app.navigation.nextStepButton.disabled = false;
+            }
+            return;
+        }
+        
+        const action = plotActions[state.currentPlotActionIndex];
+        const textBasedTypes = ['drugs', 'oxytocin', 'urine_protein', 'urine_acetone', 'urine_volume'];
+        
+        app.scenario.mcqOptions.innerHTML = ''; // Clear previous inputs/mcqs
+
+        if (textBasedTypes.includes(action.type)) {
+            // --- HANDLE TEXT-BASED INPUT ---
+            app.partogram.svg.classList.remove('interactive');
+            app.scenario.plotTools.style.display = 'none';
+            setInstructions(`Enter the data for <strong>${action.label}</strong> at Hour ${action.data.time}.`, 'prompt');
+            
+            const mcqContainer = app.scenario.mcqOptions;
+            let inputHTML = '';
+            if (action.type === 'oxytocin') {
+                inputHTML = `
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                        <label for="tutor-oxy-ul">U/L:</label><input type="text" id="tutor-oxy-ul" class="refine-input" style="width:100px">
+                        <label for="tutor-oxy-rate">Rate:</label><input type="text" id="tutor-oxy-rate" class="refine-input" style="width:100px">
+                    </div>`;
+            } else {
+                inputHTML = `<div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;"><label>${action.label}:</label><input type="text" id="tutor-text-input" style="width:200px; padding:5px;"></div>`;
+            }
+            
+            mcqContainer.innerHTML = `${inputHTML}<button id="tutor-submit-text" class="tool-button">Submit Value</button>`;
+            
+            document.getElementById('tutor-submit-text').onclick = () => {
+                let isCorrect = false;
+                let userValue;
+                if (action.type === 'oxytocin') {
+                    userValue = {
+                        ul: document.getElementById('tutor-oxy-ul').value,
+                        rate: document.getElementById('tutor-oxy-rate').value
+                    };
+                    isCorrect = userValue.ul.trim() === action.data.value.ul.trim() && userValue.rate.trim() === action.data.value.rate.trim();
+                } else {
+                    userValue = document.getElementById('tutor-text-input').value;
+                    isCorrect = userValue.trim().toLowerCase() === String(action.data.value).trim().toLowerCase();
+                }
+
+                if (isCorrect) {
+                    setInstructions(`Correct! Plotting ${action.label}...`, 'success');
+                    plotDataPoint(action, 'tutor');
+                    state.currentPlotActionIndex++;
+                    setTimeout(handlePlotAction, 800);
+                } else {
+                    setInstructions(`That's not the correct value. The correct value was <strong>'${JSON.stringify(action.data.value)}'</strong>. Please try again.`, 'error');
+                }
+            };
+
+        } else {
+            // --- HANDLE GRAPHICAL PLOT ---
+            const instruction = `Select the <strong>${action.symbol || 'correct'}</strong> tool. Plot ${action.label} at <strong>${JSON.stringify(action.data.value)}</strong> for <strong>Hour ${action.data.time}</strong>.`
+            setInstructions(instruction, 'prompt');
+            app.partogram.svg.classList.add('interactive');
+            
+            if (action.symbol) {
+                app.scenario.plotTools.style.display = 'block';
+                const currentTool = app.scenario.plotTools.querySelector(`[data-symbol="${action.symbol}"]`);
+                if(currentTool && !currentTool.classList.contains('selected')) {
+                    app.scenario.plotTools.querySelectorAll('.tool-button').forEach(btn => btn.classList.remove('selected'));
+                    currentTool.classList.add('selected');
+                    state.selectedSymbol = action.symbol;
+                }
+            } else {
+                 app.scenario.plotTools.style.display = 'none';
+                 state.selectedSymbol = null;
+            }
+        }
+    }
+
+    function showMCQ(task) {
+        app.scenario.actionTitle.textContent = 'Your Task: Make a Decision';
+        setInstructions(`<p><strong>${task.question}</strong></p>`);
+        app.scenario.mcqOptions.innerHTML = '';
+        
+        task.options.forEach(option => {
+            const button = document.createElement('button');
+            button.innerHTML = `<strong>${option.id}.</strong> ${option.text}`;
+            button.onclick = () => handleMCQAnswer(option.id, task);
+            app.scenario.mcqOptions.appendChild(button);
+        });
+    }
+
+    function handleMCQAnswer(selectedId, task) {
+        const buttons = app.scenario.mcqOptions.querySelectorAll('button');
+        buttons.forEach(btn => btn.disabled = true);
+        const selectedButton = Array.from(buttons).find(b => b.innerHTML.startsWith(`<strong>${selectedId}.`));
+
+        if (selectedId === task.correctAnswer) {
+            selectedButton.classList.add('correct');
+            app.scenario.feedbackPanel.className = 'feedback correct';
+            app.scenario.feedbackPanel.innerHTML = task.feedback;
+        } else {
+            selectedButton.classList.add('incorrect');
+            const correctButton = Array.from(buttons).find(b => b.innerHTML.startsWith(`<strong>${task.correctAnswer}.`));
+            correctButton.classList.add('correct');
+            app.scenario.feedbackPanel.className = 'feedback incorrect';
+            app.scenario.feedbackPanel.innerHTML = `<strong>Not quite.</strong> The best choice was <strong>${task.correctAnswer}</strong>. <hr> ${task.feedback}`;
+        }
+
+        app.scenario.feedbackPanel.style.display = 'block';
+        app.navigation.nextStepButton.disabled = false;
+        
+        const step = state.currentScenario.steps[state.currentStepIndex];
+        if(step.task.type === 'final_mcq' || (step.task.mcq && !state.currentScenario.steps[state.currentStepIndex + 1])) {
+             app.navigation.nextStepButton.textContent = 'View Case Debrief';
+        } else {
+            app.navigation.nextStepButton.textContent = 'Next Step';
+        }
+    }
+
+    function showResults() {
+        app.mainContent.style.display = 'none';
+        app.results.screen.style.display = 'block';
+        const summary = state.currentScenario.finalSummary;
+        app.results.title.textContent = `Case Debrief: ${state.currentScenario.title}`;
+        const learningPointsHTML = summary.learningPoints.map(p => `<li>${p}</li>`).join('');
+        app.results.summary.innerHTML = `
+            <h3>Final Diagnosis</h3>
+            <p>${summary.diagnosis}</p>
+            <h3>Partogram Interpretation</h3>
+            <p>${summary.interpretation}</p>
+            <h3>Correct Management</h3>
+            <p>${summary.management}</p>
+            <div class="key-point">
+              <h3>Key Learning Points</h3>
+              <ul>${learningPointsHTML}</ul>
+            </div>
+        `;
+    }
+    
+    initialize();
+
+});
+</script>
+
+</body>
+</html>

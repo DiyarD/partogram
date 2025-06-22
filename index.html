@@ -104,7 +104,7 @@
         .tool-button.plotted:hover { background-color: #dcfce7; border-color: #15803d; }
 
 
-        .mcq-options button {
+        .mcq-option-button {
             display: block;
             width: 100%;
             padding: 12px 16px;
@@ -118,19 +118,19 @@
             transition: all 0.2s ease;
             line-height: 1.4;
         }
-        .mcq-options button strong {
+        .mcq-option-button strong {
             color: var(--accent-color);
             margin-right: 8px;
         }
-        .mcq-options button:hover:not(:disabled) {
+        .mcq-option-button:hover:not(:disabled) {
             background-color: #eff6ff;
             border-color: var(--accent-color);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
-        .mcq-options button:disabled { cursor: not-allowed; opacity: 0.7; }
-        .mcq-options button.correct { background-color: #dcfce7 !important; border-color: var(--success-color) !important; font-weight: bold; }
-        .mcq-options button.incorrect { background-color: #fee2e2 !important; border-color: var(--danger-color) !important; }
+        .mcq-option-button:disabled { cursor: not-allowed; opacity: 0.7; }
+        .mcq-option-button.correct { background-color: #dcfce7 !important; border-color: var(--success-color) !important; font-weight: bold; }
+        .mcq-option-button.incorrect { background-color: #fee2e2 !important; border-color: var(--danger-color) !important; }
 
         #feedback-panel { margin-top: 16px; padding: 12px; border-radius: 6px; font-size: 0.95em; display: none; }
         #feedback-panel.correct { background-color: #e0f2fe; border: 1px solid #7dd3fc; color: #0c4a6e; }
@@ -160,7 +160,7 @@
         .key-point { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 10px; margin: 15px 0; }
         .key-point ul { padding-left: 20px; }
         
-        /* New "About" section styles */
+        /* "About" section styles */
         .about-section {
             text-align: left;
             max-width: 600px;
@@ -179,6 +179,23 @@
             margin-bottom: 5px;
         }
 
+        /* Responsive styles */
+        @media (max-width: 1220px) { /* A bit more than 800+400 to account for padding */
+            #main-content {
+                flex-direction: column;
+            }
+            #partogram-container {
+                min-width: 100%;
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                padding: 10px;
+            }
+            #scenario-container {
+                min-width: 100%;
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -979,10 +996,6 @@ document.addEventListener('DOMContentLoaded', () => {
             y: (v) => Y_POS.maternal_start + Y_POS.maternal_h - (((v - 50) / 140) * Y_POS.maternal_h),
             val: (y) => (((Y_POS.maternal_start + Y_POS.maternal_h - y) / Y_POS.maternal_h) * 140) + 50
         },
-        temp: {
-            y: (t) => Y_POS.temp_start + Y_POS.temp_h - (((t - 35) / 5) * Y_POS.temp_h),
-            val: (y) => (((Y_POS.temp_start + Y_POS.temp_h - y) / Y_POS.temp_h) * 5) + 35
-        },
         time: {
             val: (x) => (x - MARGIN.left) / (G.col_w * 2)
         }
@@ -1201,8 +1214,9 @@ document.addEventListener('DOMContentLoaded', () => {
                  elGroup.appendChild(createSvgElement('line', { x1: x-5, y1: y2, x2: x+5, y2: y2, stroke: COLORS.accentDark, 'stroke-width': 3 }));
                  break;
             case 'temp':
-                 el = createSvgElement('circle', { cx: x, cy: scale.temp.y(data.value), r: 4, fill: COLORS.dangerColor});
-                 elGroup.appendChild(drawText(data.value.toFixed(1), x + G.col_w, scale.temp.y(data.value), { 'font-size': '12px', 'text-anchor': 'end' }));
+                 const tempYPos = Y_POS.temp_start + Y_POS.temp_h / 2;
+                 el = createSvgElement('circle', { cx: x + G.col_w / 2, cy: tempYPos, r: 4, fill: COLORS.dangerColor});
+                 elGroup.appendChild(drawText(data.value.toFixed(1), x + G.col_w, tempYPos, { 'font-size': '12px', 'text-anchor': 'end' }));
                  break;
         }
         if (el) elGroup.appendChild(el);
@@ -1470,7 +1484,7 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'contractions': setInstructions(`First, select the contraction strength.`, 'prompt'); createOptionButtons(['weak', 'moderate', 'strong'], 'duration'); break;
             case 'pulse': requireClick(`Click on the chart to set an initial <strong>Pulse</strong> value. You can refine it after.`); break;
             case 'bp': state.plotSubState = 'awaiting_systolic'; requireClick(`Plotting BP: Click to set <strong>Systolic</strong> pressure at Hour ${action.data.time}.`); break;
-            case 'temp': requireClick(`Click in the temp row at Hour ${action.data.time} to plot temperature. You can refine it after.`); break;
+            case 'temp': requireClick(`Click on the desired time column (at Hour ${action.data.time}) to set the temperature.`); break;
             case 'oxytocin':
             case 'drugs':
             case 'urine_protein':
@@ -1567,22 +1581,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 finalizePlot(userAction);
                 break;
             case 'fhr':
-            case 'pulse':
-            case 'temp': {
+            case 'pulse': {
                 showTempMarker();
                 let val, inputId, label;
                 if(userAction.type === 'fhr') {
                     val = Math.round(scale.fhr.val(svgP.y) / 5) * 5;
                     inputId = 'refine-fhr';
                     label = 'FHR';
-                } else if (userAction.type === 'pulse') {
+                } else { // pulse
                     val = Math.round(scale.vitals.val(svgP.y));
                     inputId = 'refine-pulse';
                     label = 'Pulse';
-                } else { // temp
-                    val = scale.temp.val(svgP.y).toFixed(1);
-                    inputId = 'refine-temp';
-                    label = 'Temp';
                 }
                 
                 showRefinePanel();
@@ -1590,7 +1599,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 app.partogram.svg.classList.remove('interactive');
                 app.scenario.toolOptionsPanel.innerHTML = `
                     <label for="${inputId}" style="margin-right: 5px;">${label}:</label>
-                    <input type="number" id="${inputId}" value="${val}" class="refine-input" step="${userAction.type === 'temp' ? '0.1' : '1'}">
+                    <input type="number" id="${inputId}" value="${val}" class="refine-input" step="1">
                     <button id="confirm-${userAction.type}" class="tool-button">Confirm</button>
                     <button id="cancel-${userAction.type}" class="tool-button" style="background-color: #fee2e2;">X</button>
                 `;
@@ -1599,6 +1608,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     finalizePlot(userAction);
                 };
                  document.getElementById(`cancel-${userAction.type}`).onclick = () => {
+                    hideTempMarker();
+                    app.scenario.toolOptionsPanel.style.display = 'none';
+                    app.partogram.svg.classList.add('interactive');
+                    setInstructions(`Plot for ${label} cancelled. Click again to plot.`, 'prompt');
+                };
+                break;
+            }
+            case 'temp': {
+                showTempMarker();
+                const val = action.data.value.toFixed(1);
+                const inputId = 'refine-temp';
+                const label = 'Temp';
+
+                showRefinePanel();
+                setInstructions(`Refine the ${label} value if needed and confirm.`, 'prompt');
+                app.partogram.svg.classList.remove('interactive');
+                app.scenario.toolOptionsPanel.innerHTML = `
+                    <label for="${inputId}" style="margin-right: 5px;">${label}:</label>
+                    <input type="number" id="${inputId}" value="${val}" class="refine-input" step="0.1">
+                    <button id="confirm-temp" class="tool-button">Confirm</button>
+                    <button id="cancel-temp" class="tool-button" style="background-color: #fee2e2;">X</button>
+                `;
+                document.getElementById(`confirm-temp`).onclick = () => {
+                    userAction.data.value = parseFloat(document.getElementById(inputId).value);
+                    finalizePlot(userAction);
+                };
+                 document.getElementById(`cancel-temp`).onclick = () => {
                     hideTempMarker();
                     app.scenario.toolOptionsPanel.style.display = 'none';
                     app.partogram.svg.classList.add('interactive');
@@ -1854,6 +1890,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         task.options.forEach(option => {
             const button = document.createElement('button');
+            button.className = 'mcq-option-button';
+            button.dataset.optionId = option.id;
             button.innerHTML = `<strong>${option.id}.</strong> ${option.text}`;
             button.onclick = () => handleMCQAnswer(option.id, task);
             app.scenario.mcqOptions.appendChild(button);
@@ -1861,9 +1899,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleMCQAnswer(selectedId, task) {
-        const buttons = app.scenario.mcqOptions.querySelectorAll('button');
+        const buttons = app.scenario.mcqOptions.querySelectorAll('.mcq-option-button');
         buttons.forEach(btn => btn.disabled = true);
-        const selectedButton = Array.from(buttons).find(b => b.innerHTML.startsWith(`<strong>${selectedId}.`));
+        
+        const selectedButton = app.scenario.mcqOptions.querySelector(`.mcq-option-button[data-option-id="${selectedId}"]`);
 
         if (selectedId === task.correctAnswer) {
             selectedButton.classList.add('correct');
@@ -1871,8 +1910,8 @@ document.addEventListener('DOMContentLoaded', () => {
             app.scenario.feedbackPanel.innerHTML = task.feedback;
         } else {
             selectedButton.classList.add('incorrect');
-            const correctButton = Array.from(buttons).find(b => b.innerHTML.startsWith(`<strong>${task.correctAnswer}.`));
-            correctButton.classList.add('correct');
+            const correctButton = app.scenario.mcqOptions.querySelector(`.mcq-option-button[data-option-id="${task.correctAnswer}"]`);
+            if (correctButton) correctButton.classList.add('correct');
             app.scenario.feedbackPanel.className = 'feedback incorrect';
             app.scenario.feedbackPanel.innerHTML = `<strong>Not quite.</strong> The best choice was <strong>${task.correctAnswer}</strong>. <hr> ${task.feedback}`;
         }

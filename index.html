@@ -345,7 +345,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- DATA: CLINICAL SCENARIOS --- //
-    const scenarios = [
+        const scenarios = [
   {
     "id": "scenario_01_power_failure",
     "title": "Scenario 1: The Classic 'Power' Failure",
@@ -652,6 +652,29 @@ document.addEventListener('DOMContentLoaded', () => {
         "time": 8,
         "info": "<strong>Review at 08:00 PM (T+8 hours).</strong><br>You review Sarah's chart. She's now <strong>8cm</strong> dilated with the head at <strong>1/5 palpable</strong> (+1 station). However, you note the oxytocin infusion has resulted in contractions now occurring <strong>6 times every 10 minutes</strong>. The FHR baseline has risen to <strong>170 bpm</strong>. Her partogram data has been updated.",
         "prePlotActions": [
+          { "type": "dilation", "data": { "time": 0, "value": 4 } },
+          { "type": "descent", "data": { "time": 0, "value": 4 } },
+          { "type": "contractions", "data": { "time": 0, "value": 2, "duration": "moderate" } },
+          { "type": "fhr", "data": { "time": 0, "value": 145 } },
+          { "type": "liquor", "data": { "time": 0, "value": "I" } },
+          { "type": "moulding", "data": { "time": 0, "value": 0 } },
+          { "type": "pulse", "data": { "time": 0, "value": 88 } },
+          { "type": "bp", "data": { "time": 0, "value": { "systolic": 120, "diastolic": 75 } } },
+          { "type": "temp", "data": { "time": 0, "value": 37.0 } },
+          { "type": "dilation", "data": { "time": 4, "value": 5 } },
+          { "type": "descent", "data": { "time": 4, "value": 3 } },
+          { "type": "contractions", "data": { "time": 4, "value": 3, "duration": "moderate" } },
+          { "type": "fhr", "data": { "time": 4, "value": 140 } },
+          { "type": "moulding", "data": { "time": 4, "value": 1 } },
+          { "type": "pulse", "data": { "time": 4, "value": 90 } },
+          { "type": "bp", "data": { "time": 4, "value": { "systolic": 122, "diastolic": 78 } } },
+          { "type": "dilation", "data": { "time": 6, "value": 6 } },
+          { "type": "descent", "data": { "time": 6, "value": 3 } },
+          { "type": "liquor", "data": { "time": 4.1, "value": "C" } },
+          { "type": "contractions", "data": { "time": 6, "value": 3, "duration": "moderate" } },
+          { "type": "fhr", "data": { "time": 6, "value": 140 } },
+          { "type": "pulse", "data": { "time": 6, "value": 92 } },
+          { "type": "bp", "data": { "time": 6, "value": { "systolic": 120, "diastolic": 75 } } },
           { "type": "dilation", "data": { "time": 8, "value": 8 } },
           { "type": "descent", "data": { "time": 8, "value": 2 } },
           { "type": "contractions", "data": { "time": 8, "value": 6, "duration": "strong" } },
@@ -1243,8 +1266,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.plottedData.descent.push(data);
                 break;
             case 'fhr':
-                connectPoints(state.plottedData.fhr, scale.fhr.y);
-                el = createSvgElement('circle', { cx: x, cy: scale.fhr.y(data.value), r: 4, fill: COLORS.mainText });
+                const clampedFhrValue = Math.max(80, Math.min(200, data.value));
+                if (state.plottedData.fhr.length > 0) {
+                    const prevData = state.plottedData.fhr[state.plottedData.fhr.length - 1];
+                    const prevClampedValue = Math.max(80, Math.min(200, prevData.value));
+                    elGroup.appendChild(createSvgElement('line', {
+                        x1: scale.x(prevData.time), y1: scale.fhr.y(prevClampedValue),
+                        x2: x, y2: scale.fhr.y(clampedFhrValue),
+                        stroke: COLORS.mainText, 'stroke-width': 2
+                    }));
+                }
+                el = createSvgElement('circle', { cx: x, cy: scale.fhr.y(clampedFhrValue), r: 4, fill: COLORS.mainText });
                 state.plottedData.fhr.push(data);
                 break;
             case 'liquor': case 'moulding':
@@ -1255,8 +1287,9 @@ document.addEventListener('DOMContentLoaded', () => {
                  el = drawText(String(data.value), x + (G.col_w / 2), y_zone_lm.start + y_zone_lm.h / 2, { 'font-weight': 'bold', 'font-size': '16px' });
                  break;
             case 'contractions':
+                 const clampedContractions = Math.max(0, Math.min(5, data.value));
                  const y_base = Y_POS.contractions_start + Y_POS.contractions_h;
-                 const y_h = (data.value / 5) * Y_POS.contractions_h;
+                 const y_h = (clampedContractions / 5) * Y_POS.contractions_h;
                  let fill;
                  switch(data.duration) {
                     case 'weak': fill = 'url(#pattern-weak)'; break;
@@ -1284,13 +1317,24 @@ document.addEventListener('DOMContentLoaded', () => {
                  el = drawText(String(data.value), x + G.col_w, Y_POS.urine_start + (Y_POS.urine_h * 5 / 6), { 'font-size': '12px', 'text-anchor': 'end' });
                  break;
             case 'pulse':
-                 connectPoints(state.plottedData.pulse, scale.vitals.y);
-                 el = createSvgElement('circle', { cx: x, cy: scale.vitals.y(data.value), r: 4, fill: COLORS.mainText });
+                 const clampedPulseValue = Math.max(50, Math.min(190, data.value));
+                 if (state.plottedData.pulse.length > 0) {
+                     const prevData = state.plottedData.pulse[state.plottedData.pulse.length-1];
+                     const prevClampedValue = Math.max(50, Math.min(190, prevData.value));
+                     elGroup.appendChild(createSvgElement('line', {
+                         x1: scale.x(prevData.time), y1: scale.vitals.y(prevClampedValue),
+                         x2: x, y2: scale.vitals.y(clampedPulseValue),
+                         stroke: COLORS.mainText, 'stroke-width': 2
+                     }));
+                 }
+                 el = createSvgElement('circle', { cx: x, cy: scale.vitals.y(clampedPulseValue), r: 4, fill: COLORS.mainText });
                  state.plottedData.pulse.push(data);
                  break;
             case 'bp':
-                 const y1 = scale.vitals.y(data.value.systolic);
-                 const y2 = scale.vitals.y(data.value.diastolic);
+                 const clampedSystolic = Math.max(50, Math.min(190, data.value.systolic));
+                 const clampedDiastolic = Math.max(50, Math.min(190, data.value.diastolic));
+                 const y1 = scale.vitals.y(clampedSystolic);
+                 const y2 = scale.vitals.y(clampedDiastolic);
                  el = createSvgElement('line', { x1: x, y1: y1, x2: x, y2: y2, stroke: COLORS.accentDark, 'stroke-width': 3 });
                  elGroup.appendChild(createSvgElement('line', { x1: x-5, y1: y1, x2: x+5, y2: y1, stroke: COLORS.accentDark, 'stroke-width': 3 }));
                  elGroup.appendChild(createSvgElement('line', { x1: x-5, y1: y2, x2: x+5, y2: y2, stroke: COLORS.accentDark, 'stroke-width': 3 }));
@@ -1557,6 +1601,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const stepTime = action.data.time;
         const svg = app.partogram.svg;
         
+        const y = svgP.y;
+        const type = action.type;
+        const y_bounds = {
+            'fhr': [Y_POS.fhr_start, Y_POS.fhr_start + Y_POS.fhr_h],
+            'liquor': [Y_POS.liquor_start, Y_POS.liquor_start + Y_POS.liquor_h],
+            'moulding': [Y_POS.moulding_start, Y_POS.moulding_start + Y_POS.moulding_h],
+            'dilation': [Y_POS.labor_graph_start, Y_POS.labor_graph_start + Y_POS.labor_graph_h],
+            'descent': [Y_POS.labor_graph_start, Y_POS.labor_graph_start + Y_POS.labor_graph_h],
+            'contractions': [Y_POS.contractions_start, Y_POS.contractions_start + Y_POS.contractions_h],
+            'pulse': [Y_POS.maternal_start, Y_POS.maternal_start + Y_POS.maternal_h],
+            'bp': [Y_POS.maternal_start, Y_POS.maternal_start + Y_POS.maternal_h],
+            'temp': [Y_POS.temp_start, Y_POS.temp_start + Y_POS.temp_h]
+        };
+
+        if (y_bounds[type] && (y < y_bounds[type][0] || y > y_bounds[type][1])) {
+            const areaName = action.label || type;
+            setInstructions(`Please click within the correct area for '${areaName}'.`, 'error');
+            return;
+        }
+
         const hideTempMarker = () => {
             const marker = svg.querySelector('#temp-click-marker');
             if (marker) marker.remove();

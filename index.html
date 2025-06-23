@@ -1543,7 +1543,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         plotDataPoint(userAction, 'test');
                         state.testModeUserPlots.push(userAction);
                         optionsPanel.style.display = 'none';
-                        setInstructions('Plotting successful. Select another tool or click "Submit & Verify".', 'success');
+                        setInstructions('Plotting successful. Select another tool or click "Submit & Verify".', 'prompt');
                         app.navigation.verifyButton.disabled = false;
                     }
                 });
@@ -1585,7 +1585,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 app.navigation.verifyButton.disabled = false;
                 state.pendingPlot = null;
                 state.plotSubState = null;
-                setInstructions('Plotting successful. Select another tool or click "Submit & Verify".', 'success');
+                setInstructions('Plotting successful. Select another tool or click "Submit & Verify".', 'prompt');
             } else { // Tutor Mode Finalization
                 const correctAction = state.pendingPlot;
                 

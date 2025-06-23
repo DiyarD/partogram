@@ -773,20 +773,20 @@ document.addEventListener('DOMContentLoaded', () => {
     "title": "Scenario 7: The Back-Breaking Labour",
     "introduction": "Jessica, a 31-year-old G1P0 at 40 weeks, is admitted in labour. She complains of intense, unrelenting back pain that persists even between contractions. On initial vaginal examination, the diamond-shaped anterior fontanelle is easily felt, confirming an Occipito-Posterior (OP) position.",
     "finalSummary": {
-      "diagnosis": "Slow Progress in Labour due to Persistent Occipito-Posterior (OP) Malposition",
-      "interpretation": "The partogram showed slow progress (crossing the Alert Line) despite the development of strong contractions. This pattern, combined with the initial finding of an OP position and a high fetal head, points to a 'Passenger' issue. The larger occipito-frontal diameter presented by the deflexed head struggles to navigate the pelvis, causing slow descent and dilatation.",
-      "management": "Management of a labour complicated by OP position is often expectant. The goal is to allow time for the fetal head to rotate. Key strategies include maternal repositioning (e.g., hands and knees) and ensuring adequate analgesia. Oxytocin can be used cautiously if contractions falter, but C-section is reserved for cases with confirmed arrest of progress or fetal distress.",
+      "diagnosis": "Arrest of Labour in the First Stage due to Persistent Occipito-Posterior (OP) Malposition, complicated by Secondary Inefficient Uterine Action.",
+      "interpretation": "The partogram initially showed slow progress due to the OP malposition, crossing the Alert Line despite strong contractions. After a period of expectant management, progress remained slow and contractions then became inefficient, causing the plot to drift towards the Action Line. This demonstrates a complex picture where an initial 'Passenger' problem led to a secondary 'Power' problem.",
+      "management": "Initial management correctly focused on expectant strategies (positional changes, analgesia) to promote rotation. When progress stalled and contractions weakened, the management correctly shifted to addressing the secondary power failure by commencing a judicious oxytocin infusion under close monitoring. This represents a nuanced approach to a complex labour.",
       "learningPoints": [
         "Severe, persistent back pain in labour is a classic sign of an OP position.",
-        "An OP position can be diagnosed on VE by palpating the large, diamond-shaped anterior fontanelle.",
-        "OP labours are often longer and associated with a higher rate of intervention due to the larger presenting diameter.",
-        "Management focuses on allowing time for rotation, maternal positioning, and judicious use of oxytocin if necessary."
+        "OP labours are often prolonged. Initial management is often expectant, focusing on maternal comfort and positioning to encourage rotation.",
+        "It is common for prolonged labours to be complicated by secondary power failure (maternal exhaustion / inefficient contractions).",
+        "When progress crosses the Alert Line, reassess the 3 P's. If the 'Power' becomes inadequate, cautious augmentation with oxytocin may be appropriate, even with a malposition, provided there is no evidence of true obstruction."
       ]
     },
     "steps": [
       {
         "time": 0,
-        "info": "<strong>Admission at 09:00 AM (T=0).</strong><br>You've confirmed Jessica's baby is in an OP position. On assessment, she is <strong>4 cm</strong> dilated, but the head is still very high at <strong>4/5 palpable</strong> (-2 station). Contractions are <strong>moderate, 3 in 10</strong>, and the FHR is <strong>145 bpm</strong>. Please plot these initial findings.",
+        "info": "<strong>Admission at 09:00 AM (T=0).</strong><br>You've confirmed Jessica's baby is in an OP position. On assessment, she is <strong>4 cm</strong> dilated, but the head is still high at <strong>4/5 palpable</strong> (-2 station). Contractions are <strong>moderate, 3 in 10</strong>, and the FHR is <strong>145 bpm</strong>. Please plot these initial findings.",
         "task": {
           "type": "interactivePlot",
           "actions": [
@@ -799,7 +799,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       {
         "time": 4,
-        "info": "<strong>Review at 01:00 PM (T+4 hours).</strong><br>Four hours later, progress has been slow and the plot has crossed the Alert Line. The fetal head has descended to <strong>3/5 palpable</strong> (-1 station) and she is now <strong>6cm</strong> dilated. There is <strong>2+ moulding</strong>. Contractions are now <strong>strong, 4 in 10</strong>, and the FHR is stable at 140bpm. The partogram has been updated for you.",
+        "info": "<strong>Review at 01:00 PM (T+4 hours).</strong><br>Four hours later, progress has been slow and the plot has crossed the Alert Line. She is now <strong>6cm</strong> dilated, but the fetal head has not descended and remains at <strong>4/5 palpable</strong>. There is <strong>2+ moulding</strong>. Contractions are now <strong>strong, 4 in 10</strong>, and the FHR is stable at 140bpm. The partogram has been updated for you.",
         "prePlotActions": [
           { "type": "dilation", "data": { "time": 4, "value": 6 } },
           { "type": "descent", "data": { "time": 4, "value": 4 } },
@@ -808,17 +808,46 @@ document.addEventListener('DOMContentLoaded', () => {
           { "type": "fhr", "data": { "time": 4, "value": 140 } }
         ],
         "task": {
-          "type": "final_mcq",
-          "question": "Progress is slow despite strong contractions, due to the known OP position. The CTG is reassuring. What is the most appropriate management approach at this time?",
+          "type": "mcq",
+          "question": "Progress is slow due to the OP position, but contractions are strong and the CTG is reassuring. What is the most appropriate management approach at this time?",
           "options": [
             { "id": "A", "text": "Proceed immediately to Caesarean section for failure to progress." },
-            { "id": "B", "text": "Advise an epidural, encourage positional changes, and allow more time for rotation." },
+            { "id": "B", "text": "Advise an epidural, encourage positional changes, and plan to reassess in 4 hours." },
             { "id": "C", "text": "Start a high-dose oxytocin infusion to force the head down." },
             { "id": "D", "text": "Attempt a manual rotation of the fetal head now." }
           ],
           "correctAnswer": "B",
-          "feedback": "<strong>Correct.</strong> Since the fetus is not distressed and some progress is being made, expectant management is appropriate. The focus should be on pain relief (epidural) and facilitating rotation through maternal movement. Intervention like C-section is premature, and high-dose oxytocin would be risky with a mechanical issue."
+          "feedback": "<strong>Correct.</strong> Expectant management is appropriate. The fetus is not distressed, and contractions are strong. The priority is maternal comfort (epidural) and promoting rotation through positioning. Intervention is premature."
         }
+      },
+      {
+        "time": 8,
+        "info": "<strong>Reassessment at 05:00 PM (T+8 hours).</strong><br>After 4 hours with an epidural and maternal repositioning, Jessica is tiring. Progress remains slow. She is now <strong>7cm</strong> dilated, and the head has descended to <strong>2/5 palpable</strong> (0 station). However, her contractions have weakened to <strong>3 in 10 minutes and moderate strength</strong>. The FHR is stable. Please plot these new findings.",
+        "task": {
+            "type": "interactivePlot",
+            "actions": [
+                { "type": "dilation", "label": "Dilation (X)", "symbol": "X", "prompt": "Cervical Dilation (cm)", "data": { "time": 8, "value": 7 } },
+                { "type": "descent", "label": "Descent / Station (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 8, "value": 3 } },
+                { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 8, "value": 3, "duration": "moderate" } },
+                { "type": "fhr", "label": "Fetal Heart Rate", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 8, "value": 140 } }
+            ]
+        }
+      },
+      {
+          "time": 8.1,
+          "info": "The plot is now touching the Action line. The primary problem was the OP position, but now there is also evidence of secondary inefficient contractions ('power' failure), likely due to exhaustion.",
+          "task": {
+              "type": "final_mcq",
+              "question": "Given the secondary 'power' failure on top of the persistent OP position, what is the most appropriate next step to safely manage this labour?",
+              "options": [
+                { "id": "A", "text": "Proceed to Caesarean section now." },
+                { "id": "B", "text": "Allow another 4 hours of expectant management." },
+                { "id": "C", "text": "Start a judicious oxytocin infusion to augment contractions." },
+                { "id": "D", "text": "Attempt an instrumental delivery." }
+              ],
+              "correctAnswer": "C",
+              "feedback": "<strong>Correct.</strong> With the development of secondary inefficient uterine action, it is appropriate to consider careful augmentation with oxytocin. The goal is to improve the 'power' to overcome the difficult 'passenger' presentation. This must be done with caution and continuous monitoring, with a low threshold for proceeding to C-section if there is no further progress or if fetal distress develops."
+          }
       }
     ]
   },

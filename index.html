@@ -101,7 +101,12 @@
         .tool-button .symbol { font-family: monospace; font-weight: bold; font-size: 1.2em; margin-right: 5px; }
         .tool-button.plotted { border-color: var(--success-color); background-color: #f0fdf4; font-weight: bold; color: var(--success-color); }
         .tool-button.plotted:after { content: ' ✓'; }
-        .tool-button.plotted:hover { background-color: #dcfce7; border-color: #15803d; }
+        .tool-button.plotted:hover {
+            background-color: #fee2e2; /* Light red */
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+        .tool-button.plotted:hover:after { content: ' ⟲ Reset'; } /* Change text on hover to indicate reset action */
 
 
         .mcq-option-button {
@@ -136,13 +141,55 @@
         #feedback-panel.correct { background-color: #e0f2fe; border: 1px solid #7dd3fc; color: #0c4a6e; }
         #feedback-panel.incorrect { background-color: #ffedd5; border: 1px solid #fdba74; color: #7c2d12; }
         #feedback-panel strong { display: block; margin-bottom: 5px; }
-        #feedback-panel ul { list-style-type: none; padding-left: 0; }
-        #feedback-panel ul li { padding: 4px; border-radius: 4px; margin-top: 4px; }
-        #feedback-panel ul li.fb-correct { background-color: #dcfce7; }
-        #feedback-panel ul li.fb-incorrect { background-color: #fee2e2; }
-        #feedback-panel ul li.fb-missing { background-color: #fef3c7; }
+        #feedback-panel ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 10px;
+        }
+        #feedback-panel ul li {
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-top: 8px;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        #feedback-panel ul li::before {
+            margin-right: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        #feedback-panel ul li.fb-correct {
+            background-color: #f0fdf4;
+            border-color: var(--success-color);
+            color: #14532d;
+        }
+        #feedback-panel ul li.fb-correct::before {
+            content: '✔';
+            color: var(--success-color);
+        }
+        #feedback-panel ul li.fb-incorrect {
+            background-color: #fef2f2;
+            border-color: var(--danger-color);
+            color: #991b1b;
+        }
+        #feedback-panel ul li.fb-incorrect::before {
+            content: '✖';
+            color: var(--danger-color);
+        }
+        #feedback-panel ul li.fb-missing {
+            background-color: #fffbeb;
+            border-color: var(--warning-color);
+            color: #92400e;
+        }
+        #feedback-panel ul li.fb-missing::before {
+            content: '!';
+            color: var(--warning-color);
+        }
 
-        #navigation-panel { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
+        #navigation-panel { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-bottom: 20px; }
         .nav-button { padding: 10px 20px; border: none; border-radius: 6px; background-color: var(--accent-color); color: var(--white-color); font-size: 1em; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
         .nav-button:hover { background-color: var(--accent-dark); }
         .nav-button:disabled { background-color: var(--disabled-color); cursor: not-allowed; }
@@ -210,14 +257,14 @@
             <div class="about-section">
                 <h3>About this App</h3>
                 <p>
-                    This application is an experimental tool designed to help medical students and junior doctors practice their partogram interpretation skills. 
+                    This application is an experimental tool designed to help medical students practice their partogram interpretation skills. 
                     The clinical scenarios are based on common obstetric situations.
                 </p>
                 <p>
                     <strong>Disclaimer:</strong> This is currently a developmental build. If you encounter any bugs, or find any information that you believe is clinically inaccurate, please get in touch.
                 </p>
                 <p>
-                    <strong>Contact:</strong> diyar.dlair.abdullah@gmail.com
+                    <strong>Contact:</strong> <a href="mailto:diyar.dlair.abdullah@gmail.com" style="color: var(--accent-color); text-decoration: underline; font-weight: 500;">diyar.dlair.abdullah@gmail.com</a>
                 </p>
             </div>
         </div>
@@ -298,7 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { "type": "dilation", "label": "Dilation (X)", "symbol": "X", "prompt": "Cervical Dilation (cm)", "data": { "time": 0, "value": 4 } },
             { "type": "descent", "label": "Descent / Station (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 3 } },
             { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 0, "value": 2, "duration": "moderate" } },
-            { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 145 } },
+            { "type": "fhr", "label": "Fetal Heart Rate", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 145 } },
             { "type": "liquor", "label": "Amniotic Fluid", "prompt": "Enter code (I, C, M, B)", "data": { "time": 0, "value": "I" } },
             { "type": "moulding", "label": "Moulding", "prompt": "Enter grade (0-3)", "data": { "time": 0, "value": 0 } },
             { "type": "pulse", "label": "Maternal Pulse", "prompt": "Enter pulse (bpm)", "data": { "time": 0, "value": 88 } },
@@ -384,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { "type": "dilation", "label": "Dilation (X)", "symbol": "X", "prompt": "Cervical Dilation (cm)", "data": { "time": 0, "value": 5 } },
             { "type": "descent", "label": "Descent / Station (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 2 } },
             { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 0, "value": 3, "duration": "strong" } },
-            { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 130 } },
+            { "type": "fhr", "label": "Fetal Heart Rate", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 130 } },
             { "type": "liquor", "label": "Amniotic Fluid", "prompt": "Enter code (I, C, M, B)", "data": { "time": 0, "value": "C" } },
             { "type": "moulding", "label": "Moulding", "prompt": "Enter grade (0-3)", "data": { "time": 0, "value": 1 } },
             { "type": "pulse", "label": "Maternal Pulse", "prompt": "Enter pulse (bpm)", "data": { "time": 0, "value": 85 } },
@@ -451,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { "type": "dilation", "label": "Dilation (X)", "symbol": "X", "prompt": "Cervical Dilation (cm)", "data": { "time": 0, "value": 6 } },
             { "type": "descent", "label": "Descent / Station (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 2 } },
             { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 0, "value": 3, "duration": "moderate" } },
-            { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 140 } },
+            { "type": "fhr", "label": "Fetal Heart Rate", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 140 } },
             { "type": "liquor", "label": "Amniotic Fluid", "prompt": "Enter code (I, C, M, B)", "data": { "time": 0, "value": "C" } }
           ]
         }
@@ -543,7 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       {
         "time": 0.03,
-        "info": "You have correctly identified a ruptured vasa previa.",
+        "info": "With the diagnosis of a ruptured vasa previa confirmed, this is a time-critical fetal emergency.",
         "task": {
           "type": "final_mcq",
           "question": "What is the single most appropriate management step?",
@@ -622,11 +669,11 @@ document.addEventListener('DOMContentLoaded', () => {
     "title": "Scenario 6: The Exhausted Pusher",
     "introduction": "Emily, a 25-year-old G1P0 at 41 weeks, reached full dilatation at 04:00 AM and began actively pushing. The fetal head was in an Occiput Anterior (OA) position. It is now 05:30 AM.",
     "finalSummary": {
-      "diagnosis": "Prolonged Second Stage of Labour with Maternal Exhaustion",
+      "diagnosis": "Arrest of Descent in the Second Stage due to Maternal Exhaustion",
       "interpretation": "The patient was in the active second stage for 90 minutes. While initial progress was made, her contractions became less effective and she became physically exhausted, leading to an arrest of descent. The FHR remained reassuring with early decelerations, which are physiological in the second stage. There were no signs of obstruction.",
       "management": "The prolonged second stage was due to a secondary 'Power' failure (maternal exhaustion). The criteria for a safe assisted vaginal delivery were met: Full dilatation, OA position, head well below the ischial spines (+2 station), and no suspected CPD. Therefore, expediting delivery with a ventouse or forceps was the most appropriate action to resolve the situation for both mother and fetus.",
       "learningPoints": [
-        "A prolonged second stage in a nulliparous woman is typically defined as >2 hours of active pushing (or >3 with an epidural).",
+        "Arrest of progress in the second stage (e.g., for >1 hour) due to maternal exhaustion is a common indication for assisted vaginal delivery, even if the total duration is not yet 'prolonged' (>2-3 hours).",
         "The decision to intervene depends on assessing the '3 Ps'. Here, the issue was 'Power' (exhaustion), not 'Passage' or 'Passenger'.",
         "Know the criteria for assisted vaginal delivery (Forceps/Ventouse): Full dilatation, Ruptured membranes, Engaged/low head, Cephalic OA/OP, no CPD, Consent, adequate analgesia.",
         "Maternal exhaustion is a valid indication for instrumental delivery."
@@ -647,14 +694,14 @@ document.addEventListener('DOMContentLoaded', () => {
           "actions": [
             { "type": "descent", "label": "Descent / Station (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 1.5, "value": 0 } },
             { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 1.5, "value": 3, "duration": "moderate" } },
-            { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 1.5, "value": 135 } },
+            { "type": "fhr", "label": "Fetal Heart Rate", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 1.5, "value": 135 } },
             { "type": "moulding", "label": "Moulding", "prompt": "Enter grade (0-3)", "data": { "time": 1.5, "value": 2 } }
           ]
         }
       },
       {
         "time": 1.51,
-        "info": "The patient has a prolonged second stage with maternal exhaustion. The head is in OA position at +2 station (0/5 palpable). The CTG is reassuring.",
+        "info": "The patient has an arrest of descent in the second stage with maternal exhaustion. The head is in OA position at +2 station (0/5 palpable). The CTG is reassuring.",
         "task": {
           "type": "final_mcq",
           "question": "What is the most appropriate management at this point?",
@@ -695,7 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { "type": "dilation", "label": "Dilation (X)", "symbol": "X", "prompt": "Cervical Dilation (cm)", "data": { "time": 0, "value": 4 } },
             { "type": "descent", "label": "Descent / Station (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 4 } },
             { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 0, "value": 3, "duration": "moderate" } },
-            { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 145 } }
+            { "type": "fhr", "label": "Fetal Heart Rate", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 145 } }
           ]
         }
       },
@@ -758,7 +805,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       {
         "time": 0.1,
-        "info": "You have correctly diagnosed a prolonged latent phase.",
+        "info": "Given the diagnosis of a prolonged latent phase, the priority is to prevent maternal exhaustion while allowing labour to establish.",
         "task": {
           "type": "final_mcq",
           "question": "What is the most appropriate management plan?",
@@ -799,7 +846,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { "type": "dilation", "label": "Dilation (X)", "symbol": "X", "prompt": "Cervical Dilation (cm)", "data": { "time": 0, "value": 4 } },
             { "type": "descent", "label": "Descent / Station (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 0, "value": 3 } },
             { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 0, "value": 3, "duration": "moderate" } },
-            { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 140 } },
+            { "type": "fhr", "label": "Fetal Heart Rate", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 0, "value": 140 } },
             { "type": "liquor", "label": "Amniotic Fluid", "prompt": "Enter code (I, C, M, B)", "data": { "time": 0, "value": "C" } }
           ]
         }
@@ -813,7 +860,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { "type": "dilation", "label": "Dilation (X)", "symbol": "X", "prompt": "Cervical Dilation (cm)", "data": { "time": 2, "value": 6 } },
             { "type": "descent", "label": "Descent / Station (O)", "symbol": "O", "prompt": "Descent of Head (fifths palpable)", "data": { "time": 2, "value": 2 } },
             { "type": "contractions", "label": "Contractions", "prompt": "Contractions per 10 mins", "data": { "time": 2, "value": 4, "duration": "strong" } },
-            { "type": "fhr", "label": "Fetal Heart Rate (•)", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 2, "value": 135 } }
+            { "type": "fhr", "label": "Fetal Heart Rate", "prompt": "Fetal Heart Rate (bpm)", "data": { "time": 2, "value": 135 } }
           ]
         }
       },
@@ -859,7 +906,7 @@ document.addEventListener('DOMContentLoaded', () => {
     "steps": [
       {
         "time": 0,
-        "info": "<strong>Emergency Admission at 11:00 PM (T=0).</strong><br>On arrival, Karen is in distress, with a pulse of <strong>120</strong> and BP of <strong>100/60</strong>. Her abdomen is rigid ('woody') and exquisitely tender. A VE reveals she is <strong>7cm</strong> dilated with the head at 3/5 palpable, but the liquor is heavily <strong>blood-stained</strong>. The CTG is pathological with a baseline of <strong>170 bpm</strong> and uterine tachysystole. Her initial findings have been plotted.",
+        "info": "<strong>Emergency Admission at 11:00 PM (T=0).</strong><br>On arrival, Karen is in distress, with a pulse of <strong>120</strong> and BP of <strong>100/60</strong>. Her abdomen is rigid ('woody') and exquisitely tender. A VE reveals she is <strong>7cm</strong> dilated with the head at 3/5 palpable, but the liquor is heavily <strong>blood-stained</strong>. The CTG is pathological with a baseline of <strong>170 bpm</strong> and uterine tachysystole. Her initial findings have been plotted.<br><br>The CTG shows minimal variability and persistent late decelerations. The clinical picture is highly suggestive of a major obstetric emergency.",
         "prePlotActions": [
           { "type": "dilation", "data": { "time": 0, "value": 7 } },
           { "type": "descent", "data": { "time": 0, "value": 3 } },
@@ -868,11 +915,7 @@ document.addEventListener('DOMContentLoaded', () => {
           { "type": "pulse", "data": { "time": 0, "value": 120 } },
           { "type": "bp", "data": { "time": 0, "value": { "systolic": 100, "diastolic": 60 } } },
           { "type": "liquor", "data": { "time": 0, "value": "B" } }
-        ]
-      },
-      {
-        "time": 0.01,
-        "info": "The CTG shows minimal variability and persistent late decelerations. The clinical picture is highly suggestive of a major obstetric emergency.",
+        ],
         "task": {
           "type": "mcq",
           "question": "What is the most likely diagnosis?",
@@ -905,7 +948,8 @@ document.addEventListener('DOMContentLoaded', () => {
     ]
   }
 ]
-// --- DOM ELEMENTS & STATE --- //
+
+    // --- DOM ELEMENTS & STATE --- //
     const app = {
         modeSelector: document.getElementById('mode-selector'),
         mainContent: document.getElementById('main-content'),
@@ -993,7 +1037,7 @@ document.addEventListener('DOMContentLoaded', () => {
             val: (y) => ((Y_POS.labor_graph_start + Y_POS.labor_graph_h - y) / Y_POS.labor_graph_h) * 10
         },
         descent: {
-            // Corrected: Descent (value 0-5 for fifths palpable) is plotted directly on the dilation scale (0-10)
+            // Descent (value 0-5 for fifths palpable) is plotted on the 0-10 dilation Y-axis.
             y: (fifths_palpable) => scale.dilation.y(fifths_palpable),
             val: (y) => scale.dilation.val(y)
         },
@@ -1047,7 +1091,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         const drawYAxisLabel = (txt, y_start, y_height, angle = -55) => {
-             svg.appendChild(drawText(txt, 40, y_start + y_height / 2, { 'font-size': '16px', 'font-weight': 'bold', transform: `rotate(${angle}, 40, ${y_start + y_height / 2})` }));
+             svg.appendChild(drawText(txt, 40, y_start + y_height / 2, { 'font-size': '16px', transform: `rotate(${angle}, 40, ${y_start + y_height / 2})` }));
         };
 
         // TIME AXES
@@ -1102,7 +1146,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Corrected: Dilation & Descent Scale
         // Left scale (Dilation cm)
-        svg.appendChild(drawText("cm", MARGIN.left - 15, Y_POS.labor_graph_start - 10, {'text-anchor': 'end', 'font-weight':'bold', 'font-size':'12px', fill: COLORS.mainText}));
+        // svg.appendChild(drawText("cm", MARGIN.left - 15, Y_POS.labor_graph_start - 10, {'text-anchor': 'end', 'font-weight':'bold', 'font-size':'12px', fill: COLORS.mainText}));
         for (let i = 0; i <= 10; i++) {
              const y = scale.dilation.y(i);
              svg.appendChild(drawText(i, MARGIN.left-25, y, {'text-anchor': 'end'}));
@@ -1227,8 +1271,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  break;
             case 'temp':
                  const tempYPos = Y_POS.temp_start + Y_POS.temp_h / 2;
-                 el = createSvgElement('circle', { cx: x + G.col_w / 2, cy: tempYPos, r: 4, fill: COLORS.dangerColor});
-                 elGroup.appendChild(drawText(data.value.toFixed(1), x + G.col_w, tempYPos, { 'font-size': '12px', 'text-anchor': 'end' }));
+                 elGroup.appendChild(drawText(data.value.toFixed(1), x + G.col_w / 2, tempYPos, { 'font-size': '12px', 'text-anchor': 'middle' }));
                  break;
         }
         if (el) elGroup.appendChild(el);
@@ -1262,59 +1305,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handlePartogramClick(event) {
         const svg = app.partogram.svg;
+        if (!svg.classList.contains('interactive') || !state.pendingPlot) return;
+
         const pt = svg.createSVGPoint();
         pt.x = event.clientX;
         pt.y = event.clientY;
         const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
         const clickedTime = scale.time.val(svgP.x);
         
-        if (state.mode === 'tutor' && svg.classList.contains('interactive')) {
-            handleTutorPlot(svgP, clickedTime);
-        } else if (state.mode === 'test' && state.pendingPlot && svg.classList.contains('interactive')) {
-            handleTestPlotClick(event, svgP, clickedTime);
-        }
+        // Unified click handler for both modes
+        handleTestPlotClick(event, svgP, clickedTime);
     }
 
-    function handleTutorPlot(svgP, clickedTime) {
-        const action = state.currentScenario.steps[state.currentStepIndex].task.actions[state.currentPlotActionIndex];
-        if (!action) return;
-        
-        if (action.symbol && action.symbol !== state.selectedSymbol) {
-            setInstructions(`Incorrect tool selected. Please select the <strong>${action.symbol}</strong> tool to continue.`, 'error');
-            return;
-        }
-
-        if (Math.abs(clickedTime - action.data.time) > 0.45) {
-            setInstructions(`You are plotting in the wrong time column. Please try to plot at <strong>Hour ${action.data.time}</strong>.`, 'error');
-            return;
-        }
-
-        let valueIsCorrect = false;
-        let clickedValue;
-        switch(action.type) {
-            case 'dilation': clickedValue = scale.dilation.val(svgP.y); valueIsCorrect = Math.abs(clickedValue - action.data.value) < 0.5; break;
-            case 'descent': clickedValue = scale.descent.val(svgP.y); valueIsCorrect = Math.abs(clickedValue - action.data.value) < 0.5; break;
-            case 'fhr': clickedValue = scale.fhr.val(svgP.y); valueIsCorrect = Math.abs(clickedValue - action.data.value) < 8; break;
-            case 'contractions': clickedValue = scale.contractions.val(svgP.y); valueIsCorrect = clickedValue === action.data.value; break;
-            case 'pulse': clickedValue = scale.vitals.val(svgP.y); valueIsCorrect = Math.abs(clickedValue - action.data.value) < 8; break;
-            case 'bp': valueIsCorrect = svgP.y > Y_POS.maternal_start && svgP.y < Y_POS.maternal_start + Y_POS.maternal_h; break;
-            case 'liquor': valueIsCorrect = svgP.y > Y_POS.liquor_start && svgP.y < Y_POS.liquor_start + Y_POS.liquor_h; break;
-            case 'moulding': valueIsCorrect = svgP.y > Y_POS.moulding_start && svgP.y < Y_POS.moulding_start + Y_POS.moulding_h; break;
-            // temp is now text based
-            // Text-based entries are handled by handlePlotAction, not here.
-            default: valueIsCorrect = false;
-        }
-        
-        if (valueIsCorrect) {
-            setInstructions(`Correct! Plotting ${action.label || action.type}...`, 'success');
-            plotDataPoint(action, 'tutor');
-            state.currentPlotActionIndex++;
-            setTimeout(handlePlotAction, 800);
-        } else {
-            setInstructions(`That's not the correct value or position. Please review the clinical data and try again.`, 'error');
-        }
-    }
-    
     function initialize() {
         const computedStyle = getComputedStyle(document.documentElement);
         ['mainText', 'lightText', 'accentColor', 'accentDark', 'borderColor', 'dangerColor', 'warningColor', 'successColor'].forEach(c => {
@@ -1390,6 +1392,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadNextStep() {
+        const errorLayer = app.partogram.svg.querySelector('#error-highlights');
+        if (errorLayer) {
+            errorLayer.innerHTML = '';
+        }
+
         state.currentStepIndex++;
         const step = state.currentScenario.steps[state.currentStepIndex];
 
@@ -1437,9 +1444,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setupTool(action) {
         // Deselect other tools and clear options
-        app.scenario.testModeTools.querySelectorAll('.tool-button').forEach(btn => btn.classList.remove('selected'));
-        const toolButton = app.scenario.testModeTools.querySelector(`[data-tool-type="${action.type}"]`);
-        if (toolButton) toolButton.classList.add('selected');
+        if (state.mode === 'test') {
+            app.scenario.testModeTools.querySelectorAll('.tool-button').forEach(btn => btn.classList.remove('selected'));
+            const toolButton = app.scenario.testModeTools.querySelector(`[data-tool-type="${action.type}"]`);
+            if (toolButton) toolButton.classList.add('selected');
+        }
 
         const optionsPanel = app.scenario.toolOptionsPanel;
         optionsPanel.innerHTML = '';
@@ -1470,30 +1479,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             optionsPanel.innerHTML = `${inputsHTML} <button id="confirm-text" class="tool-button">Confirm</button>`;
             document.getElementById('confirm-text').onclick = finalizeCb;
+            const inputEl = document.getElementById('refine-text-input') || document.getElementById('refine-oxy-ul');
+            if (inputEl) inputEl.focus();
         }
-
-        const createOptionButtons = (values, valueKey) => {
-            optionsPanel.style.display = 'flex';
-            values.forEach(val => {
-                const btn = document.createElement('button');
-                btn.className = 'tool-button';
-                btn.textContent = val;
-                btn.onclick = () => {
-                    state.pendingPlot[valueKey] = val;
-                    optionsPanel.querySelectorAll('.tool-button').forEach(b => b.classList.remove('selected'));
-                    btn.classList.add('selected');
-                    requireClick(`Now click on the chart to plot.`);
-                };
-                optionsPanel.appendChild(btn);
-            });
-        };
 
         switch (action.type) {
             case 'dilation': case 'descent': requireClick(); break;
             case 'fhr': requireClick(`Click on the chart to set an initial <strong>FHR</strong> value. You can refine it after.`); break;
-            case 'liquor': createOptionButtons(['I', 'C', 'M', 'B'], 'value'); break;
-            case 'moulding': createOptionButtons(['0', '1', '2', '3'], 'value'); break;
-            case 'contractions': setInstructions(`First, select the contraction strength.`, 'prompt'); createOptionButtons(['weak', 'moderate', 'strong'], 'duration'); break;
+            case 'liquor':
+            case 'moulding':
+            case 'contractions':
+                 requireClick(`Click on the chart at <strong>Hour ${action.data.time}</strong> to plot <strong>${action.label}</strong>.`);
+                 break;
             case 'pulse': requireClick(`Click on the chart to set an initial <strong>Pulse</strong> value. You can refine it after.`); break;
             case 'bp': state.plotSubState = 'awaiting_systolic'; requireClick(`Plotting BP: Click to set <strong>Systolic</strong> pressure at Hour ${action.data.time}.`); break;
             case 'temp': requireClick(`Click on the desired time column (at Hour ${action.data.time}) to set the temperature.`); break;
@@ -1513,7 +1510,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         userAction.data.value = document.getElementById('refine-text-input').value;
                     }
-                    finalizePlot(userAction);
+                    // This path is only for test mode now. Tutor mode uses the click flow.
+                    if (state.mode === 'test') {
+                        const toolButton = app.scenario.testModeTools.querySelector(`[data-tool-type="${userAction.type}"]`);
+                        if (toolButton) toolButton.classList.add('plotted');
+                        plotDataPoint(userAction, 'test');
+                        state.testModeUserPlots.push(userAction);
+                        optionsPanel.style.display = 'none';
+                        setInstructions('Plotting successful. Select another tool or click "Submit & Verify".', 'success');
+                        app.navigation.verifyButton.disabled = false;
+                    }
                 });
                 break;
         }
@@ -1532,15 +1538,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const finalizePlot = (finalAction) => {
             hideTempMarker();
-            plotDataPoint(finalAction, 'test');
-            state.testModeUserPlots.push(finalAction);
-            
-            const toolButton = app.scenario.testModeTools.querySelector(`[data-tool-type="${finalAction.type}"]`);
-            if (toolButton) {
-                toolButton.classList.add('plotted');
-                toolButton.classList.remove('selected');
-            }
-            
             app.partogram.svg.classList.remove('interactive');
             const optionsPanel = app.scenario.toolOptionsPanel;
             optionsPanel.innerHTML = '';
@@ -1548,11 +1545,53 @@ document.addEventListener('DOMContentLoaded', () => {
             optionsPanel.style.position = '';
             optionsPanel.style.left = '';
             optionsPanel.style.top = '';
+            
+            if (state.mode === 'test') {
+                plotDataPoint(finalAction, 'test');
+                state.testModeUserPlots.push(finalAction);
+                
+                const toolButton = app.scenario.testModeTools.querySelector(`[data-tool-type="${finalAction.type}"]`);
+                if (toolButton) {
+                    toolButton.classList.add('plotted');
+                    toolButton.classList.remove('selected');
+                }
+                
+                app.navigation.verifyButton.disabled = false;
+                state.pendingPlot = null;
+                state.plotSubState = null;
+                setInstructions('Plotting successful. Select another tool or click "Submit & Verify".', 'success');
+            } else { // Tutor Mode Finalization
+                const correctAction = state.pendingPlot;
+                
+                const valueIsCorrect = (() => {
+                    if (finalAction.type === 'bp') {
+                        const c_s = correctAction.data.value.systolic, c_d = correctAction.data.value.diastolic;
+                        const u_s = finalAction.data.value.systolic, u_d = finalAction.data.value.diastolic;
+                        return (c_s === u_s && c_d === u_d); // Be strict in tutor mode
+                    } else if (typeof correctAction.data.value === 'string') {
+                        return String(finalAction.data.value).trim().toUpperCase() === correctAction.data.value.trim().toUpperCase();
+                    } else if (typeof correctAction.data.value === 'number') {
+                        const tolerance = (finalAction.type === 'fhr' || finalAction.type === 'pulse') ? 8 : (finalAction.type === 'dilation' || finalAction.type === 'descent') ? 0.5 : (finalAction.type === 'temp') ? 0.5 : 1;
+                        return Math.abs(finalAction.data.value - correctAction.data.value) <= tolerance;
+                    } else if (finalAction.type === 'contractions') {
+                        return finalAction.data.value === correctAction.data.value && finalAction.data.duration === correctAction.data.duration;
+                    }
+                     return JSON.stringify(finalAction.data.value) === JSON.stringify(correctAction.data.value);
+                })();
 
-            app.navigation.verifyButton.disabled = false;
-            state.pendingPlot = null;
-            state.plotSubState = null;
-            setInstructions('Plotting successful. Select another tool or click "Submit & Verify".', 'success');
+                if (valueIsCorrect) {
+                    setInstructions(`Correct! Plotting ${correctAction.label}...`, 'success');
+                    plotDataPoint(correctAction, 'tutor');
+                    state.currentPlotActionIndex++;
+                    setTimeout(handlePlotAction, 800);
+                } else {
+                    const correctValueStr = typeof correctAction.data.value === 'object' ? JSON.stringify(correctAction.data.value) : `'${correctAction.data.value}'`;
+                    setInstructions(`That's not the correct value. The correct value was ${correctValueStr}. Let's try plotting that again.`, 'error');
+                    setTimeout(handlePlotAction, 1500); // Retry the same action
+                }
+                state.pendingPlot = null;
+                state.plotSubState = null;
+            }
         };
 
         if (Math.abs(clickedTime - stepTime) > 0.45) {
@@ -1585,11 +1624,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         switch(userAction.type) {
             case 'dilation':
-                userAction.data.value = Math.round(scale.dilation.val(svgP.y));
+                userAction.data.value = scale.dilation.val(svgP.y);
                 finalizePlot(userAction);
                 break;
             case 'descent':
-                userAction.data.value = Math.round(scale.descent.val(svgP.y));
+                userAction.data.value = scale.descent.val(svgP.y);
                 finalizePlot(userAction);
                 break;
             case 'fhr':
@@ -1654,22 +1693,69 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 break;
             }
-            case 'liquor':
-            case 'moulding':
-                if (!userAction.value) {
-                    setInstructions('Please select a value from the options first.', 'error'); return;
-                }
-                userAction.data.value = userAction.value;
-                finalizePlot(userAction);
+            case 'liquor': {
+                showRefinePanel();
+                app.partogram.svg.classList.remove('interactive');
+                const optionsPanel = app.scenario.toolOptionsPanel;
+                optionsPanel.innerHTML = 'Liquor: ';
+                const values = ['I', 'C', 'M', 'B'];
+                values.forEach(val => {
+                    const btn = document.createElement('button');
+                    btn.className = 'tool-button';
+                    btn.textContent = val;
+                    btn.onclick = () => {
+                        userAction.data.value = val;
+                        finalizePlot(userAction);
+                    };
+                    optionsPanel.appendChild(btn);
+                });
                 break;
-            case 'contractions':
-                 if (!userAction.duration) {
-                    setInstructions('Please select contraction strength first.', 'error'); return;
-                }
-                userAction.data.value = scale.contractions.val(svgP.y);
-                userAction.data.duration = userAction.duration;
-                finalizePlot(userAction);
+            }
+            case 'moulding': {
+                showRefinePanel();
+                app.partogram.svg.classList.remove('interactive');
+                const optionsPanel = app.scenario.toolOptionsPanel;
+                optionsPanel.innerHTML = 'Moulding: ';
+                const values = ['0', '1', '2', '3'];
+                values.forEach(val => {
+                    const btn = document.createElement('button');
+                    btn.className = 'tool-button';
+                    btn.textContent = val;
+                    btn.onclick = () => {
+                        userAction.data.value = val;
+                        finalizePlot(userAction);
+                    };
+                    optionsPanel.appendChild(btn);
+                });
                 break;
+            }
+            case 'contractions': {
+                showRefinePanel();
+                app.partogram.svg.classList.remove('interactive');
+                setInstructions(`Select the contraction strength.`, 'prompt');
+                const optionsPanel = app.scenario.toolOptionsPanel;
+                optionsPanel.innerHTML = 'Strength: ';
+                
+                const strengthOptions = [
+                    { value: 'weak', html: '<svg width="24" height="24" viewBox="0 0 8 8" style="vertical-align: middle;"><circle cx="4" cy="4" r="1.5" fill="#0f766e"></circle></svg>' },
+                    { value: 'moderate', html: '<svg width="24" height="24" viewBox="0 0 10 10" style="vertical-align: middle;"><rect width="10" height="10" fill="url(#pattern-moderate)" stroke="#0f766e" stroke-width="0.5"></rect></svg>' },
+                    { value: 'strong', html: '<svg width="24" height="24" viewBox="0 0 20 20" style="vertical-align: middle;"><rect width="20" height="20" fill="#10b981" stroke="#0f766e" stroke-width="0.5"></rect></svg>' }
+                ];
+                
+                strengthOptions.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'tool-button';
+                    btn.style.padding = '4px';
+                    btn.innerHTML = opt.html;
+                    btn.onclick = () => {
+                        userAction.data.duration = opt.value;
+                        userAction.data.value = scale.contractions.val(svgP.y);
+                        finalizePlot(userAction);
+                    };
+                    optionsPanel.appendChild(btn);
+                });
+                break;
+            }
             case 'bp': {
                 showTempMarker();
                 const v = Math.round(scale.vitals.val(svgP.y));
@@ -1722,9 +1808,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 const toolBtn = document.createElement('button');
                 toolBtn.className = 'tool-button';
                 toolBtn.dataset.toolType = action.type;
-                toolBtn.innerHTML = action.label;
+                
+                let buttonText = action.label;
+                if (action.symbol) {
+                    buttonText = action.symbol;
+                } else if (action.label.includes('(') && action.label.includes(')')) {
+                    // Extracts content from the last pair of parentheses, e.g., "Fetal Heart Rate" -> "•"
+                    buttonText = action.label.substring(action.label.lastIndexOf('(') + 1, action.label.lastIndexOf(')'));
+                }
+                toolBtn.innerHTML = buttonText;
+
                 toolBtn.onclick = () => {
                     if (toolBtn.classList.contains('plotted')) {
+                        const errorLayer = app.partogram.svg.querySelector('#error-highlights');
+                        if (errorLayer) errorLayer.innerHTML = '';
+
                         const plotGroup = app.partogram.svg.querySelector(`g[data-plot-type='${action.type}'][data-source='test']`);
                         if(plotGroup) plotGroup.remove();
                         state.testModeUserPlots = state.testModeUserPlots.filter(p => p.type !== action.type);
@@ -1751,6 +1849,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function verifyTestPlots() {
+        // Clear previous error highlights before new verification.
+        const errorLayer = app.partogram.svg.querySelector('#error-highlights');
+        if (errorLayer) {
+            errorLayer.innerHTML = '';
+        }
+
         const step = state.currentScenario.steps[state.currentStepIndex];
         const correctActions = step.task.actions;
         const userPlots = state.testModeUserPlots;
@@ -1775,14 +1879,43 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 if (valueIsCorrect) {
-                    feedbackHTML += `<li class="fb-correct">✔ ${action.label}: Correctly plotted as ${JSON.stringify(action.data.value)}.</li>`;
+                    feedbackHTML += `<li class="fb-correct">${action.label}: Correctly plotted as ${JSON.stringify(action.data.value)}.</li>`;
                 } else {
                     allCorrect = false;
-                    feedbackHTML += `<li class="fb-incorrect">✖ ${action.label}: Incorrect. You plotted ${userValueDisplay}, but the correct value was ${JSON.stringify(action.data.value)}.</li>`;
+                    feedbackHTML += `<li class="fb-incorrect">${action.label}: Incorrect. You plotted ${userValueDisplay}, but the correct value was ${JSON.stringify(action.data.value)}.</li>`;
+                    
+                    // Logic to draw a red border around the incorrect plot on the graph.
+                    const plotGroup = app.partogram.svg.querySelector(`g[data-plot-type='${action.type}'][data-source='test']`);
+                    if (plotGroup) {
+                        try {
+                            const bbox = plotGroup.getBBox();
+                            if (bbox.width > 0 || bbox.height > 0) {
+                                const errorRect = createSvgElement('rect', {
+                                    x: bbox.x - 4,
+                                    y: bbox.y - 4,
+                                    width: bbox.width + 8,
+                                    height: bbox.height + 8,
+                                    fill: 'none',
+                                    stroke: COLORS.dangerColor,
+                                    'stroke-width': 2,
+                                    'stroke-dasharray': '4 4',
+                                    rx: 4
+                                });
+                                let errorHighlightLayer = app.partogram.svg.querySelector('#error-highlights');
+                                if (!errorHighlightLayer) {
+                                    errorHighlightLayer = createSvgElement('g', { id: 'error-highlights' });
+                                    app.partogram.svg.appendChild(errorHighlightLayer);
+                                }
+                                errorHighlightLayer.appendChild(errorRect);
+                            }
+                        } catch (e) {
+                            console.error("Could not draw error box for", action.type, e);
+                        }
+                    }
                 }
             } else {
                 allCorrect = false;
-                feedbackHTML += `<li class="fb-missing">! ${action.label}: Missing. You did not plot this finding (Correct value: ${JSON.stringify(action.data.value)}).</li>`;
+                feedbackHTML += `<li class="fb-missing">${action.label}: Missing. You did not plot this finding (Correct value: ${JSON.stringify(action.data.value)}).</li>`;
             }
         });
         feedbackHTML += '</ul>';
@@ -1800,9 +1933,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             app.scenario.feedbackPanel.className = 'feedback incorrect';
-            setInstructions('Some plots were incorrect or missing. Review the feedback and try this step again.', 'error');
-            app.navigation.nextStepButton.disabled = false; // Let them proceed even if wrong, for learning.
-            app.navigation.verifyButton.style.display = 'none';
+            setInstructions('Some plots were incorrect or missing. Review the feedback, correct your plots, and click "Submit & Verify" again.', 'error');
         }
     }
 
@@ -1813,7 +1944,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (state.currentPlotActionIndex >= plotActions.length) {
             app.partogram.svg.classList.remove('interactive');
-            app.scenario.plotTools.style.display = 'none'; // Hide this for tutor mode
+            app.scenario.plotTools.style.display = 'none';
+            app.scenario.toolOptionsPanel.style.display = 'none';
             app.scenario.mcqOptions.innerHTML = '';
             
             if (step.task.mcq) {
@@ -1826,69 +1958,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         const action = plotActions[state.currentPlotActionIndex];
-        // Add liquor and moulding to text-based for more explicit tutoring
-        const textBasedTypes = ['temp', 'drugs', 'oxytocin', 'urine_protein', 'urine_acetone', 'urine_volume', 'liquor', 'moulding'];
-        
         app.scenario.mcqOptions.innerHTML = '';
-        app.scenario.plotTools.style.display = 'none'; // Ensure this is always hidden in tutor mode flow.
-
-        if (textBasedTypes.includes(action.type)) {
-            // --- HANDLE TEXT-BASED INPUT ---
-            app.partogram.svg.classList.remove('interactive');
-            setInstructions(`Enter the data for <strong>${action.label}</strong> at Hour ${action.data.time}.`, 'prompt');
-            
-            const mcqContainer = app.scenario.mcqOptions;
-            let inputHTML = '';
-            if (action.type === 'oxytocin') {
-                inputHTML = `
-                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                        <label for="tutor-oxy-ul">U/L:</label><input type="text" id="tutor-oxy-ul" class="refine-input" style="width:100px">
-                        <label for="tutor-oxy-rate">Rate:</label><input type="text" id="tutor-oxy-rate" class="refine-input" style="width:100px">
-                    </div>`;
-            } else {
-                inputHTML = `<div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;"><label>${action.label}:</label><input type="text" id="tutor-text-input" style="width:200px; padding:5px;"></div>`;
-            }
-            
-            mcqContainer.innerHTML = `${inputHTML}<button id="tutor-submit-text" class="tool-button">Submit Value</button>`;
-            
-            document.getElementById('tutor-submit-text').onclick = () => {
-                let isCorrect = false;
-                let userValue;
-                if (action.type === 'oxytocin') {
-                    userValue = {
-                        ul: document.getElementById('tutor-oxy-ul').value,
-                        rate: document.getElementById('tutor-oxy-rate').value
-                    };
-                    // A bit lenient on string comparison
-                    isCorrect = userValue.ul.trim() == action.data.value.ul && userValue.rate.trim() == action.data.value.rate;
-                } else {
-                    userValue = document.getElementById('tutor-text-input').value;
-                    isCorrect = userValue.trim().toLowerCase() === String(action.data.value).trim().toLowerCase();
-                }
-
-                if (isCorrect) {
-                    setInstructions(`Correct! Plotting ${action.label}...`, 'success');
-                    plotDataPoint(action, 'tutor');
-                    state.currentPlotActionIndex++;
-                    setTimeout(handlePlotAction, 800);
-                } else {
-                    setInstructions(`That's not the correct value. The correct value was <strong>'${JSON.stringify(action.data.value)}'</strong>. Please review the case details and try again.`, 'error');
-                }
-            };
-            // Auto-focus on the input
-            const inputEl = document.getElementById('tutor-text-input') || document.getElementById('tutor-oxy-ul');
-            if (inputEl) inputEl.focus();
-
-        } else {
-            // --- HANDLE GRAPHICAL PLOT ---
-            // This handles dilation, descent, fhr, contractions, pulse, bp
-            const instruction = `Now, please click on the chart to plot <strong>${action.label}</strong>. The correct value is <strong>${typeof action.data.value === 'object' ? JSON.stringify(action.data.value) : action.data.value}</strong> at <strong>Hour ${action.data.time}</strong>.`;
-            setInstructions(instruction, 'prompt');
-            app.partogram.svg.classList.add('interactive');
-            
-            // Programmatically set the symbol for validation, rather than asking user to click a tool
-            state.selectedSymbol = action.symbol || null;
-        }
+        
+        // Use the unified tool setup function for all plot types
+        setupTool(action);
     }
 
     function showMCQ(task) {
@@ -1907,25 +1980,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleMCQAnswer(selectedId, task) {
-        const buttons = app.scenario.mcqOptions.querySelectorAll('.mcq-option-button');
-        buttons.forEach(btn => btn.disabled = true);
-        
         const selectedButton = app.scenario.mcqOptions.querySelector(`.mcq-option-button[data-option-id="${selectedId}"]`);
 
         if (selectedId === task.correctAnswer) {
+            const buttons = app.scenario.mcqOptions.querySelectorAll('.mcq-option-button');
+            buttons.forEach(btn => btn.disabled = true);
+
             selectedButton.classList.add('correct');
             app.scenario.feedbackPanel.className = 'feedback correct';
             app.scenario.feedbackPanel.innerHTML = task.feedback;
+            app.navigation.nextStepButton.disabled = false;
         } else {
+            selectedButton.disabled = true;
             selectedButton.classList.add('incorrect');
-            const correctButton = app.scenario.mcqOptions.querySelector(`.mcq-option-button[data-option-id="${task.correctAnswer}"]`);
-            if (correctButton) correctButton.classList.add('correct');
             app.scenario.feedbackPanel.className = 'feedback incorrect';
-            app.scenario.feedbackPanel.innerHTML = `<strong>Not quite.</strong> The best choice was <strong>${task.correctAnswer}</strong>. <hr> ${task.feedback}`;
+            app.scenario.feedbackPanel.innerHTML = `<strong>Not quite.</strong> That is not the correct choice. Please review the clinical information and try another option.`;
         }
 
         app.scenario.feedbackPanel.style.display = 'block';
-        app.navigation.nextStepButton.disabled = false;
         
         const step = state.currentScenario.steps[state.currentStepIndex];
         if(step.task.type === 'final_mcq' || (step.task.mcq && !state.currentScenario.steps[state.currentStepIndex + 1])) {

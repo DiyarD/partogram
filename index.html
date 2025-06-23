@@ -1609,11 +1609,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     setInstructions(`Correct! Plotting ${correctAction.label}...`, 'success');
                     plotDataPoint(correctAction, 'tutor');
                     state.currentPlotActionIndex++;
-                    setTimeout(handlePlotAction, 800);
+                    setTimeout(handlePlotAction, 1500);
                 } else {
                     const correctValueStr = typeof correctAction.data.value === 'object' ? JSON.stringify(correctAction.data.value) : `'${correctAction.data.value}'`;
                     setInstructions(`That's not the correct value. The correct value was ${correctValueStr}. Let's try plotting that again.`, 'error');
-                    setTimeout(handlePlotAction, 1500); // Retry the same action
+                    setTimeout(handlePlotAction, 3000); // Retry the same action
                 }
                 state.pendingPlot = null;
                 state.plotSubState = null;
